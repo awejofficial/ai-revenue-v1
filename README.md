@@ -13,7 +13,7 @@
 **An autonomous, context-aware Revenue Recovery & Intelligent Dunning Platform designed for modern SaaS & E-Commerce businesses.**  
 *Find revenue that’s slipping away and win it back: From payment degradation and failed subscriptions to B2B receivables and checkout drop-offs.*
 
-[Track 03 Alignment](#-track-03-challenge-alignment) • [Architecture](#-system-architecture) • [Latest Updates](#-what-we-have-updated) • [Quick Start](#-quick-start-guide) • [Operations Console](#-operations-console--simulation) • [Roadmap](#-next-phases--roadmap)
+[Track 03 Alignment](#-track-03-challenge-alignment) • [Architecture](#-system-architecture) • [3 Recovery Vectors](#-three-core-recovery-vectors) • [Web Portals](#-web-operations--analytics-portals) • [Quick Start](#-quick-start-guide) • [Simulation Sandbox](#-operations-console--simulation-sandbox) • [API Reference](#-api-reference) • [Roadmap](#-next-phases--roadmap)
 
 </div>
 
@@ -32,7 +32,7 @@ Revenue loss rarely happens in one clean step. A payment degrades, a checkout ge
 
 | Evaluation Criterion ("The Bar") | How This System Exceeds It |
 | :--- | :--- |
-| **Don’t just identify the problem — recover the money** | Autonomous closed-loop auto-resolution that listens for inbound webhook events (`payment_intent.succeeded`, `payment.captured`, `payment_link.paid`) to automatically close cases and update recovered revenue. |
+| **Don’t just identify the problem — recover the money** | Autonomous closed-loop auto-resolution that listens for inbound webhook events (`payment_intent.succeeded`, `payment.captured`, `payment_link.paid`) to automatically close cases, update recovered revenue, and terminate dunning sequences. |
 | **Measured money recovered across a batch** | Live real-time KPI ledger tracking **$ At Risk**, **$ Recovered**, and **Recovery Rate (%)** across real and batch simulated event streams. |
 | **Compliant escalation** | Dynamic policy engine that triggers instant white-glove Slack operations handoffs for high-risk anomalies, fraud flags, and enterprise accounts ($5,000+ LTV). |
 | **Strict stopping rules** | Segment-specific retry caps (1 retry for Trials, 3 for Standard, 5 for Enterprise) and hard failure breakers to prevent spamming or brand erosion. |
@@ -42,13 +42,14 @@ Revenue loss rarely happens in one clean step. A payment degrades, a checkout ge
 
 ## 📌 Executive Summary
 
-Failed recurring payments and involuntary churn cost subscription businesses **up to 9% of annual revenue**. Traditional dunning tools rely on dumb, blind retry schedules (e.g., retrying every 24 hours until failure), which alienate customers, trigger bank fraud blocks, and exhaust gateway limits.
+Failed recurring payments, abandoned checkouts, and overdue invoices cost online businesses **up to 9% of annual revenue**. Traditional dunning tools rely on dumb, blind retry schedules (e.g., retrying every 24 hours until failure), which alienate customers, trigger bank fraud blocks, and exhaust gateway limits.
 
 The **Autonomous AI Revenue Recovery Agent** bridges deterministic payment logic with modern generative intelligence (**Google Gemini 3.5/3.6 Flash**):
 1. **Context-Aware Decisions**: Incorporates customer Lifetime Value (LTV), subscription tier, 90-day failure velocity, and past behavior.
-2. **Hybrid Engine**: Instant zero-latency rule matching for known failures (`insufficient_funds`, `card_expired`, `suspected_fraud`) with smart LLM fallback for ambiguous or rare processor declines.
-3. **Multi-Channel Orchestration**: Dispatches personalized Razorpay UPI/NetBanking links, Stripe payment update links, SMS via Twilio, email via SendGrid, and automated Slack ops escalation.
+2. **Hybrid Engine**: Instant zero-latency rule matching for known failure patterns (`insufficient_funds`, `card_expired`, `checkout_drop_off`, `suspected_fraud`) with smart LLM fallback for ambiguous or rare processor declines.
+3. **Multi-Channel Orchestration**: Dispatches personalized Razorpay UPI/NetBanking links, Stripe payment update links, SMS via Twilio, responsive HTML email via SendGrid with dynamic promo codes, and automated Slack ops escalation.
 4. **Closed-Loop Resolution**: Ingests inbound payment success webhooks to automatically resolve cases, calculate recovery metrics, and stop unnecessary outreach.
+5. **Unified Operations Suite**: Three dedicated web portals for real-time monitoring, customer 360 intelligence, and conversion funnel analytics.
 
 ---
 
@@ -57,12 +58,33 @@ The **Autonomous AI Revenue Recovery Agent** bridges deterministic payment logic
 | Capability | Description |
 | :--- | :--- |
 | 🧠 **Context-Enriched AI Diagnostics** | Evaluates customer profile (LTV, plan, history) via Google Gemini 3.5/3.6 Flash to determine whether to retry, re-route, contact, or escalate. |
-| ⚡ **Deterministic Rules + LLM Fallback** | Instant deterministic execution for standard failure codes with automated Gemini fallback for edge-case decline codes. |
-| 💳 **Dual-Gateway Support (Stripe + Razorpay)** | Native support for Razorpay payment links (Cards, UPI, NetBanking) and Stripe payment intents with currency detection (`INR`, `USD`, etc.). |
-| 🛡️ **Policy Engine & Guardrails** | Segment-specific retry caps (e.g., up to 5 retries for High-LTV, 1 retry for Free Trials) preventing customer annoyance and compliance violations. |
+| ⚡ **Deterministic Rules + LLM Fallback** | Instant deterministic execution across 7 rule sets with automated Gemini fallback for edge-case decline codes. |
+| 🛒 **Checkout Drop-Off Recovery** | Detects abandoned carts and 3DS verification drop-offs, instantly generating 1-click recovery links with dynamic VIP discounts (`RECOVER10`). |
+| 👥 **Customer 360 Risk Directory** | Real-time risk profiling classifying customers into Safe, Moderate, High, and Critical risk tiers with 90-day failure telemetry. |
+| 📈 **Recovery Funnel & Analytics** | Multi-stage conversion funnel tracking drop-offs across Detection $\rightarrow$ Diagnosis $\rightarrow$ Outreach $\rightarrow$ Recovery with gateway performance metrics. |
+| 💳 **Dual-Gateway Support (Stripe + Razorpay)** | Native support for Razorpay payment links (Cards, UPI, NetBanking) and Stripe payment intents with automatic currency detection (`INR`, `USD`). |
+| 🛡️ **Policy Engine & Guardrails** | Segment-specific retry caps (up to 5 retries for High-LTV, 1 retry for Free Trials) preventing customer annoyance and compliance violations. |
 | 🔄 **Closed-Loop Auto-Resolution** | Ingests `payment_intent.succeeded` or `payment.captured` webhooks to automatically mark cases resolved and calculate recovered revenue. |
-| 📊 **Real-Time Operations Console** | Embedded web dashboard with KPI counters ($ at Risk, $ Recovered, Recovery Rate), interactive 1-click simulation bar, and full audit timelines. |
 | 🗄️ **Dual Database Architecture** | Zero-friction local development using SQLite fallback with automated startup migrations, and production-ready async PostgreSQL (`asyncpg`). |
+
+---
+
+## 🎯 Three Core Recovery Vectors
+
+The platform handles revenue leakage across three distinct vectors:
+
+```text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                   REVENUE LEAKAGE VECTORS                                        │
+├──────────────────────────────┬──────────────────────────────────┬────────────────────────────────┤
+│ 1. Subscription & Dunning    │ 2. Checkout Drop-Off & Carts     │ 3. B2B Overdue Receivables     │
+├──────────────────────────────┼──────────────────────────────────┼────────────────────────────────┤
+│ • Involuntary churn          │ • 3DS authentication drop-offs   │ • Overdue Net-30 / Net-60      │
+│ • Expired credit cards       │ • Checkout friction timeouts     │ • High-value enterprise unpaid │
+│ • Insufficient funds         │ • 1-click cart recovery links    │ • Automated ERP polling worker │
+│ • Smart payday 72h alignment │ • Dynamic VIP discounts (10% off)│ • Operations team escalation   │
+└──────────────────────────────┴──────────────────────────────────┴────────────────────────────────┘
+```
 
 ---
 
@@ -70,63 +92,92 @@ The **Autonomous AI Revenue Recovery Agent** bridges deterministic payment logic
 
 ```mermaid
 flowchart TD
-    subgraph Ingestion["1. Ingestion Layer"]
-        A1[Stripe Webhook] --> B[FastAPI Webhook Intake]
-        A2[Razorpay Webhook] --> B
-        A3[ERP / Billing Poller] --> B
+    subgraph Ingestion["1. Multi-Vector Ingestion Layer"]
+        A1[Stripe Webhooks<br/>payment_failed, charge.failed] --> B[FastAPI Webhook & Ingestion Intake]
+        A2[Razorpay Webhooks<br/>payment.failed, order.paid] --> B
+        A3[Checkout Telemetry<br/>checkout_drop_off, 3DS friction] --> B
+        A4[ERP / Billing Poller<br/>Overdue Net-30 Invoices] --> B
     end
 
     subgraph Storage["2. Storage & State Layer"]
-        B --> C[(PostgreSQL / SQLite)]
+        B --> C[(PostgreSQL / SQLite<br/>Async Connection Pool)]
     end
 
     subgraph Orchestration["3. Intelligence & Policy Engine"]
         C --> D[Orchestrator State Machine]
-        D --> E[Customer Context Fetcher<br/>LTV, Segment, 90-Day History]
-        E --> F{Deterministic Rule Match?}
-        F -- "Yes (Standard Code)" --> G[Deterministic Strategy]
-        F -- "No (Rare / Complex Code)" --> H[Google Gemini 3.5/3.6 Flash]
-        G --> I[Policy Engine Guardrails<br/>Retry Limits & Segment Constraints]
+        D --> E[Customer 360 Context Fetcher<br/>LTV, Segment, 90-Day Velocity]
+        E --> F{7 Deterministic Rules Match?}
+        F -- "Yes (Known Pattern)" --> G[Deterministic Strategy<br/>Payday Retry / Cart Link / Expired]
+        F -- "No (Rare / Complex Decline)" --> H[Google Gemini 3.5/3.6 Flash<br/>JSON Diagnostics & Action Plan]
+        G --> I[Policy Engine Guardrails<br/>Segment Caps, Max Retries & Value Limits]
         H --> I
     end
 
-    subgraph Execution["4. Multi-Channel Execution"]
-        I --> J1[Razorpay UPI / Link]
-        I --> J2[Stripe Payment Link]
-        I --> J3[SendGrid Email Dispatch]
-        I --> J4[Twilio SMS Dispatch]
-        I --> J5[Slack Ops Escalation]
+    subgraph Execution["4. Multi-Channel & Incentive Execution"]
+        I --> J1[Razorpay UPI / NetBanking / Card Link]
+        I --> J2[Stripe 1-Click Payment Link / Intent]
+        I --> J3[SendGrid Responsive HTML Email<br/>Dynamic VIP Promo Code Engine]
+        I --> J4[Twilio SMS Instant Shortlinks]
+        I --> J5[Slack Ops Team Escalation]
     end
 
     subgraph AutoResolution["5. Closed-Loop Auto-Resolution"]
-        K[Inbound Payment Succeeded Webhook] --> L[Auto-Resolve Case]
-        L --> M[Update Revenue KPI & Stop Dunning]
-        L --> N[Post Slack Celebration Alert]
+        K[Inbound Payment Succeeded Webhook<br/>Stripe / Razorpay / Link Paid] --> L[Auto-Resolve Case Engine]
+        L --> M[Update Revenue KPI Ledger & Stop Dunning]
+        L --> N[Broadcast Slack Recovery Celebration]
+    end
+
+    subgraph Portals["6. Operations & Analytics Suite"]
+        C --> P1[Live Operations Console<br/>/dashboard]
+        C --> P2[Customer 360 Risk Directory<br/>/customers]
+        C --> P3[Recovery Funnel & Analytics<br/>/analytics]
     end
 ```
 
 ---
 
+## 🖥️ Web Operations & Analytics Portals
+
+The application provides three built-in browser portals for business teams:
+
+### 1. 🎛️ Live Operations Console (`/dashboard` or `/`)
+- **Real-Time KPI Ledger**: Live counters for **$ At Risk**, **$ Recovered**, **Active Cases**, and **Recovery Rate %**.
+- **Interactive 1-Click Simulation Toolbar**: Test 7 scenarios in real time (High LTV Payday, Cart Drop-Off, Expired Card, Fraud, etc.).
+- **Active & Historical Cases Table**: Shows AI reasoning, retry counts, scheduled execution time, and case status.
+- **Audit Timeline Stream**: Timestamped log of outbound communications across Email, SMS, Slack, and Gateways.
+
+### 2. 👥 Customer 360 & Risk Intelligence Directory (`/customers`)
+- **Risk Classification Matrix**: Dynamically categorizes customer accounts into **Safe**, **Moderate Risk**, **High Risk**, and **Critical Risk**.
+- **Customer Profiles**: Displays Lifetime Value (LTV), subscription plan, company, and 90-day failure velocity.
+- **Direct Intervention Triggers**: 1-click direct recovery trigger buttons per customer.
+
+### 3. 📈 Recovery Funnel & Gateway Analytics Portal (`/analytics`)
+- **4-Stage Recovery Funnel**: Visual conversion tracking from **Detected Cases** $\rightarrow$ **Diagnosed** $\rightarrow$ **Outreach Dispatched** $\rightarrow$ **Auto-Recovered**.
+- **Gateway Distribution**: Real-time breakdown of transactions processed across **Stripe** (USD) and **Razorpay** (INR / UPI).
+- **Channel Utilization**: Dispatched counts across **Email**, **SMS**, **Slack Alerts**, and **Payment Links**.
+- **Failure Code Telemetry**: Categorized failure reasons (Checkout Drop-Off, Insufficient Funds, Card Expired, Fraud, etc.).
+
+---
+
 ## 🚀 What We Have Updated
 
-### 1. 🧠 Upgraded to High-Speed Google Gemini 3.5/3.6 Models
-- Configured dynamic model prioritization (`gemini-3.5-flash`, `gemini-3.6-flash`) in `app/llm_client.py`.
-- Tested and achieved ultra-low diagnostic latency (**~1.34 seconds**) with full JSON schema validation.
-- Validated real-time reasoning for enterprise customers and ambiguous gateway declines.
+### 1. 🛒 Added Checkout Drop-Off & Cart Abandonment Recovery
+- Built detection and automated 1-click recovery for checkout drop-offs and 3DS friction.
+- Integrated dynamic promotional incentives (e.g. `RECOVER10` 10% instant discount for high-value carts) within email and SMS touchpoints.
 
-### 2. 🔒 Git Sanitization & Security Hardening
-- Scrubbed repository history, removing legacy commits and author logs.
-- Hardened `.gitignore` to prevent any exposure of `.env`, SQLite databases (`*.sqlite`, `*.db`), logs (`*.log`), and virtual environments (`venv/`).
-- Initialized clean `main` branch ready for official deployment and open-source contribution.
+### 2. 👥 Customer 360 Risk Intelligence Portal
+- Added `/customers` web portal and `/api/customers` API endpoint providing a holistic view of accounts, LTV tiers, and failure history.
 
-### 3. 💳 Dual-Gateway & Multi-Channel Dispatch
-- Unified payment link creation across both Razorpay (UPI, NetBanking, Cards in INR/USD) and Stripe.
-- Configured multi-channel notifications (SendGrid email templates, Twilio SMS with shortlinks, Slack incident channels).
-- Added `DRY_RUN` mode for safe local testing and sandbox demonstrations.
+### 3. 📈 Recovery Funnel & Gateway Analytics Suite
+- Built `/analytics` web portal and `/api/analytics` telemetry API tracking end-to-end recovery conversion rates and channel effectiveness.
 
-### 4. 📊 Operations Console & Simulation Sandbox
-- Built a live dashboard with recovery metrics, active case tracking, and timeline event audit logs.
-- Integrated a 1-click simulation toolbar to test scenarios like High-LTV Payday Retries, Card Expiry, Fraud Escalation, and Auto-Resolution.
+### 4. 🧠 High-Speed Google Gemini 3.5/3.6 Integration
+- Configured dynamic model prioritization (`gemini-3.5-flash`, `gemini-3.6-flash`) in `app/llm_client.py` with structured JSON diagnostic output.
+- Ultra-low latency diagnostics (~1.34s) for ambiguous gateway declines.
+
+### 5. 💳 Resilient Dual-Gateway & Multi-Channel Dispatch
+- Resilient payment link creation across Stripe and Razorpay (UPI, NetBanking, Cards).
+- Multi-channel alerts via SendGrid, Twilio, and Slack with automatic fallback for sandbox/test environments.
 
 ---
 
@@ -138,7 +189,7 @@ ai-revenue-v1/
 │   ├── actions.py         # Multi-channel dispatch (Razorpay, Stripe, SendGrid, Twilio, Slack)
 │   ├── db.py              # Dual DB layer (Async PostgreSQL + SQLite fallback with auto-migrations)
 │   ├── llm_client.py      # Google Gemini 3.5/3.6 client with context-aware prompt engineering
-│   ├── main.py            # FastAPI server, webhook endpoints, and Live Operations Console
+│   ├── main.py            # FastAPI server, webhooks, and Operations / Customers / Analytics Portals
 │   ├── orchestrator.py    # State machine (Detect → Diagnose → Guardrail → Execute → Auto-Resolve)
 │   ├── poller.py          # Background worker for ERP / billing overdue invoice ingestion
 │   ├── schemas.py         # Pydantic models for webhooks, cases, and API responses
@@ -208,7 +259,7 @@ TWILIO_PHONE_NUMBER=+1234567890
 SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
 ```
 
-### 4. Seed Seed Data & Launch
+### 4. Seed Data & Launch
 ```bash
 # Seed demo customer accounts and baseline history
 python -m app.seed_data
@@ -217,32 +268,37 @@ python -m app.seed_data
 python run_server.py
 ```
 
-- 🌐 **Live Operations Console**: [http://127.0.0.1:8000/dashboard](http://127.0.0.1:8000/dashboard)
+- 🎛️ **Live Operations Console**: [http://127.0.0.1:8000/dashboard](http://127.0.0.1:8000/dashboard)
+- 👥 **Customer 360 Risk Directory**: [http://127.0.0.1:8000/customers](http://127.0.0.1:8000/customers)
+- 📈 **Recovery Funnel Analytics**: [http://127.0.0.1:8000/analytics](http://127.0.0.1:8000/analytics)
 - 📖 **Interactive OpenAPI Documentation**: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
 ---
 
-## 🕹️ Operations Console & Simulation
+## 🕹️ Operations Console & Simulation Sandbox
 
-You can test every recovery flow in real-time either through the web dashboard at `http://127.0.0.1:8000/dashboard` or via `curl`:
+You can test every recovery flow in real-time either through the web dashboard or via `curl`:
 
 ```bash
-# Scenario 1: High-LTV ($499 Payday 72h Retry + VIP Email)
+# Scenario 1: High-LTV ($499 Payday 72h Retry + Concierge Link)
 curl -X POST "http://localhost:8000/admin/simulate?scenario=high_ltv_insufficient_funds"
 
-# Scenario 2: Repeat Failure (Billing Date Switch Recommendation)
+# Scenario 2: Checkout Drop-Off (1-Click Recovery Link + 10% VIP Discount Code RECOVER10)
+curl -X POST "http://localhost:8000/admin/simulate?scenario=checkout_drop_off"
+
+# Scenario 3: Repeat Failure (Billing Date Switch Recommendation)
 curl -X POST "http://localhost:8000/admin/simulate?scenario=repeat_failure"
 
-# Scenario 3: Expired Card (Secure Payment Method Update Link)
+# Scenario 4: Expired Card (Secure Payment Method Update Link)
 curl -X POST "http://localhost:8000/admin/simulate?scenario=expired_card"
 
-# Scenario 4: Suspected Fraud (Instant Slack Escalation to Operations Team)
+# Scenario 5: Suspected Fraud (Instant Slack Escalation to Operations Team)
 curl -X POST "http://localhost:8000/admin/simulate?scenario=fraud"
 
-# Scenario 5: Free Trial (Gentle 1-Shot Retry with Low Aggressiveness)
+# Scenario 6: Free Trial (Gentle 1-Shot Retry with Low Aggressiveness)
 curl -X POST "http://localhost:8000/admin/simulate?scenario=trial_user"
 
-# Scenario 6: Inbound Payment Succeeded (Auto-Resolution Closed-Loop)
+# Scenario 7: Inbound Payment Succeeded (Auto-Resolution Closed-Loop)
 curl -X POST "http://localhost:8000/admin/simulate?scenario=payment_succeeded"
 ```
 
@@ -252,15 +308,20 @@ curl -X POST "http://localhost:8000/admin/simulate?scenario=payment_succeeded"
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `POST` | `/webhooks/psp` | Ingests Stripe & Razorpay webhook events (`payment_failed`, `charge.failed`, `payment_intent.succeeded`). |
+| `GET` | `/` / `/dashboard` | Interactive Live Operations Console with 1-click simulation sandbox. |
+| `GET` | `/customers` | Customer 360 & Risk Intelligence Directory UI. |
+| `GET` | `/analytics` | Recovery Funnel & Gateway Analytics Portal UI. |
+| `GET` | `/api/customers` | Returns holistic customer 360 data, LTV, segment, and risk tier categorization. |
+| `GET` | `/api/analytics` | Returns recovery funnel conversion rates, gateway volumes, and channel metrics. |
+| `POST` | `/webhooks/psp` | Ingests Stripe & Razorpay webhooks (`payment_failed`, `charge.failed`, `payment_intent.succeeded`). |
 | `POST` | `/webhooks/billing` | Ingests overdue invoices and billing anomalies from ERP systems. |
-| `POST` | `/admin/simulate` | 1-Click test harness to simulate payment failure and resolution workflows. |
+| `POST` | `/admin/simulate` | 1-Click test harness to simulate payment failures, drop-offs, and auto-resolutions. |
 | `POST` | `/admin/process` | Triggers immediate evaluation and processing of pending/scheduled recovery actions. |
 | `POST` | `/admin/resolve/{case_id}` | Manually resolves an open case and marks invoice as recovered. |
 | `GET` | `/admin/action-logs` | Fetches the real-time communication audit trail (Email, SMS, Slack, Links). |
 | `GET` | `/dashboard/stats` | Returns live KPI telemetry ($ at Risk, $ Recovered, Recovery Rate, Active Cases). |
 | `GET` | `/dashboard/cases` | Retrieves active and historical recovery cases with AI reasoning logs. |
-| `GET` | `/dashboard` | Interactive Web Operations Console. |
+| `GET` | `/health` | Server health check endpoint. |
 
 ---
 
@@ -271,7 +332,8 @@ timeline
     title AI Revenue Recovery Platform Evolution
     Phase 1 : Hybrid Rules + Gemini LLM Diagnostics
             : Dual-Gateway Razorpay & Stripe Links
-            : Live Web Operations Dashboard
+            : Checkout Drop-Off & 3DS Friction Recovery
+            : 3 Operations Portals (Console, 360, Funnel)
             : Closed-Loop Webhook Auto-Resolution
     Phase 2 : Predictive Pre-Dunning (15d Card Expiry Alerts)
             : Multi-PSP Smart Retry Routing (Approval Rate AI)

@@ -629,6 +629,7 @@ async def api_analytics():
                 "razorpay": {"name": "Razorpay (UPI / NetBanking)", "currency": "INR", "status": "active"}
             }
         }
+@app.get("/dashboard/cases")
 @app.get("/dashboard/cases/")
 async def dashboard_cases(limit: int = 30):
     """Returns the latest cases list."""
@@ -792,6 +793,16 @@ async def dashboard_page():
   }
   .panel-head h2{font-family:var(--serif);font-size:16px;font-weight:500;margin:0;}
   .panel-head .count{font-family:var(--mono);font-size:11px;color:var(--ink-soft);}
+
+  /* Case Filter Pills */
+  .case-filter-pills{display:flex;gap:4px;flex-wrap:wrap;}
+  .case-pill{
+    font-family:var(--sans);font-size:10.5px;padding:3.5px 7px;border-radius:3px;
+    border:1px solid var(--hair-strong);background:var(--paper-2);color:var(--ink-soft);
+    cursor:pointer;transition:all .15s ease;font-weight:500;
+  }
+  .case-pill:hover{color:var(--ink);background:var(--paper);border-color:var(--ink);}
+  .case-pill.active{background:var(--ink);color:var(--paper);border-color:var(--ink);font-weight:600;}
 
   .feed{max-height:600px;overflow-y:auto;}
   .case-row{

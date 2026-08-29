@@ -41,7 +41,8 @@ async def test_all():
 
     # 2. Test Rules Diagnosis
     print("\n--- 2. Testing Diagnosis Engine (Deterministic Rules) ---")
-    diag_high = await diagnose_root_case("insufficient_funds", "Declined", 499.0, "USD", "payment_failed", ctx_high)
+    ctx_high_first = {**ctx_high, "is_first_failure": True, "is_repeat_offender": False, "failed_attempts": 0}
+    diag_high = await diagnose_root_case("insufficient_funds", "Declined", 499.0, "USD", "payment_failed", ctx_high_first)
     print(f"High-LTV Insufficient Funds Diagnosis: {diag_high['action']} in {diag_high['delay_hours']}h - {diag_high['reasoning']}")
     assert diag_high['action'] == 'retry_payment'
     assert diag_high['delay_hours'] == 72, "High LTV should get 72h payday retry"
@@ -50,6 +51,11 @@ async def test_all():
     diag_fraud = await diagnose_root_case("suspected_fraud", "Fraud detected", 350.0, "USD", "payment_failed", ctx_fraud)
     print(f"Fraud Diagnosis: {diag_fraud['action']} - {diag_fraud['reasoning']}")
     assert diag_fraud['action'] == 'human_handoff'
+
+    # Test Drop-off Diagnosis
+    diag_dropoff = await diagnose_root_case("checkout_drop_off", "3DS timeout", 320.0, "USD", "checkout_drop_off", ctx_high)
+    print(f"Drop-Off Diagnosis: {diag_dropoff['action']} in {diag_dropoff['delay_hours']}h - {diag_dropoff['reasoning']}")
+    assert diag_dropoff['action'] == 'send_checkout_recovery'
 
     print("[PASS] Rules Diagnosis tests passed!")
 
