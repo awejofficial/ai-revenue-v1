@@ -68,6 +68,47 @@ SAMPLE_CUSTOMERS = [
             "plan": "starter_monthly",
             "country": "US"
         }
+    },
+    {
+        "customer_id": "cus_dropoff_06",
+        "email": "sarah.connor@cyberdyne.io",
+        "phone": "+14155552671",
+        "crm_data": {
+            "name": "Sarah Connor",
+            "company": "Cyberdyne Systems",
+            "ltv": 3200,
+            "segment": "high_ltv",
+            "plan": "scale_annual",
+            "country": "US",
+            "cart_items": ["Scale Plan Annual Upgrade", "Dedicated Support Add-on"],
+            "cart_value": 320.00
+        }
+    },
+    {
+        "customer_id": "cus_enterprise_07",
+        "email": "david.k@cloudinfra.com",
+        "phone": "+14085558900",
+        "crm_data": {
+            "name": "David Kim",
+            "company": "CloudInfra Global",
+            "ltv": 18500,
+            "segment": "enterprise",
+            "plan": "enterprise_custom",
+            "country": "US"
+        }
+    },
+    {
+        "customer_id": "cus_b2b_08",
+        "email": "finance@metrologistics.in",
+        "phone": "+919833445566",
+        "crm_data": {
+            "name": "Karan Malhotra",
+            "company": "Metro Logistics Pvt Ltd",
+            "ltv": 4500,
+            "segment": "standard",
+            "plan": "b2b_freight_saas",
+            "country": "IN"
+        }
     }
 ]
 

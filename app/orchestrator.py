@@ -5,9 +5,18 @@ Full autonomous lifecycle: Detect → Diagnose → Decide → Execute → Audit 
 Uses Rules-First + Google Gemini Fallback for context-enriched intelligence.
 """
 
+import os
+import sys
 import json
 import asyncio
 from datetime import datetime, timedelta
+
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
 from app.db import get_pool
 from app.actions import (
     retry_payment,
@@ -135,8 +144,17 @@ async def diagnose_root_case(
             "delay_hours": 4,
             "reasoning": "Free trial subscription. Scheduled 1 single gentle retry in 4 hours."
         }
+
+    # Rule 6: Checkout Drop-Off / Cart Abandonment -> Instant 1-Click Recovery Link with personalized incentive
+    if event_type in ["cart_abandoned", "checkout_drop_off"] or code in ["checkout_drop_off", "cart_abandoned", "3ds_auth_timeout", "checkout_friction"]:
+        incentive = "10% VIP instant discount (Code: RECOVER10)" if (context.get('ltv', 0) > 1000 or amount >= 100) else "Free express checkout & priority link"
+        return {
+            "action": "send_checkout_recovery",
+            "delay_hours": 1,
+            "reasoning": f"Checkout dropped at payment step (Cart Value: ${amount:.2f}). Triggered instant 1-click recovery with {incentive}."
+        }
     
-    # Rule 6: Fallback to Google Gemini for ambiguous / rare codes
+    # Rule 7: Fallback to Google Gemini for ambiguous / rare codes
     print(f"[Orchestrator] Invoking Google Gemini for code: '{code}' (Segment: {context.get('segment')})")
     llm_result = await llm_diagnose(
         error_code=error_code,
@@ -306,6 +324,50 @@ async def process_event(event_id: str):
             schedule_next = datetime.utcnow() + timedelta(hours=delay_hrs)
             retry_increment = 1
             
+        elif decision['action'] == 'send_checkout_recovery':
+            # Generate 1-click checkout recovery link
+            link_res = await retry_payment(
+                customer_id=customer_id,
+                amount_usd=amount,
+                currency=currency,
+                email=email,
+                phone=phone,
+                case_id=case_id,
+                description=f"Checkout Recovery for Case #{case_id}"
+            )
+            pay_url = link_res.get('payment_link', '')
+            action_parts = []
+            
+            has_discount = "RECOVER10" in decision.get('reasoning', '')
+            discount_badge = '<div style="background:#E6F4EA;color:#137333;padding:8px 12px;border-radius:4px;font-weight:bold;margin:12px 0;">🎉 Applied Promo Code: RECOVER10 (10% Instant Off)</div>' if has_discount else ''
+            
+            if email:
+                email_html = f"""
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e0e0e0; border-radius: 8px;">
+                  <h2 style="color: #1a1a1a; margin-top:0;">You left items in your cart!</h2>
+                  <p>Hi there, we noticed you started checkout for <strong>{currency} {amount:.2f}</strong> but didn't finish.</p>
+                  {discount_badge}
+                  <p style="margin: 24px 0;">
+                    <a href="{pay_url}" style="background-color: #0B6E4F; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+                      Complete 1-Click Checkout
+                    </a>
+                  </p>
+                  <p style="color: #666; font-size: 12px;">Your reserved cart and preferred items are saved for the next 24 hours.</p>
+                </div>
+                """
+                await send_email(email, f"🛒 Complete your order of {currency} {amount:.2f} (Saved for you)", email_html, pay_url, case_id, customer_id)
+                action_parts.append(f"Cart Recovery Email sent to {email}")
+            
+            if phone:
+                sms_text = f"You left items in your cart ({currency} {amount:.2f})! Complete checkout in 1 tap: {pay_url}"
+                await send_sms(phone, sms_text, case_id, customer_id)
+                action_parts.append(f"Cart Recovery SMS sent to {phone}")
+                
+            last_action = f"Dispatched 1-Click Checkout Recovery: {', '.join(action_parts) if action_parts else pay_url}"
+            new_status = 'awaiting_input'
+            schedule_next = datetime.utcnow() + timedelta(hours=delay_hrs)
+            retry_increment = 1
+
         elif decision['action'] == 'send_email':
             if email:
                 html = f"""

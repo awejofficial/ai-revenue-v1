@@ -1,9 +1,17 @@
 # app/actions.py
 import os
+import sys
 import json
 import asyncio
 from datetime import datetime
 from dotenv import load_dotenv
+
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
 
 load_dotenv()
 
