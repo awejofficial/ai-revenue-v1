@@ -11,11 +11,32 @@
 [![Stripe](https://img.shields.io/badge/Payment-Stripe-635BFF?style=for-the-badge&logo=stripe&logoColor=white)](https://stripe.com)
 
 **An autonomous, context-aware Revenue Recovery & Intelligent Dunning Platform designed for modern SaaS & E-Commerce businesses.**  
-*Detects payment declines in real-time, diagnoses root causes with customer context, executes hyper-personalized recovery actions, and autonomously closes the revenue loop.*
+*Find revenue that’s slipping away and win it back: From payment degradation and failed subscriptions to B2B receivables and checkout drop-offs.*
 
-[Architecture](#-system-architecture) • [Latest Updates](#-what-we-have-updated) • [Quick Start](#-quick-start-guide) • [Operations Console](#-operations-console--simulation) • [Roadmap](#-next-phases--roadmap) • [API Reference](#-api-reference)
+[Track 03 Alignment](#-track-03-challenge-alignment) • [Architecture](#-system-architecture) • [Latest Updates](#-what-we-have-updated) • [Quick Start](#-quick-start-guide) • [Operations Console](#-operations-console--simulation) • [Roadmap](#-next-phases--roadmap)
 
 </div>
+
+---
+
+## 🎯 Track 03: AI Revenue Recovery — Challenge Alignment
+
+> **"Find revenue that’s slipping away and win it back."**  
+> *Build an agent that detects revenue at risk, determines the right intervention, and executes a bounded recovery workflow: from payment failures and checkout abandonment to overdue receivables.*
+
+### ⚡ Why Now?
+Revenue loss rarely happens in one clean step. A payment degrades, a checkout gets abandoned, a subscription fails, or an invoice goes overdue. Traditional dunning tools rely on blind, static retry timers that frustrate customers, damage merchant reputations, and cause chargebacks.  
+**Modern AI closes the loop**: detecting degradation $\rightarrow$ diagnosing root causes with customer context $\rightarrow$ selecting bounded, compliant interventions $\rightarrow$ automatically verifying recovery.
+
+### 🏆 Meeting "The Bar"
+
+| Evaluation Criterion ("The Bar") | How This System Exceeds It |
+| :--- | :--- |
+| **Don’t just identify the problem — recover the money** | Autonomous closed-loop auto-resolution that listens for inbound webhook events (`payment_intent.succeeded`, `payment.captured`, `payment_link.paid`) to automatically close cases and update recovered revenue. |
+| **Measured money recovered across a batch** | Live real-time KPI ledger tracking **$ At Risk**, **$ Recovered**, and **Recovery Rate (%)** across real and batch simulated event streams. |
+| **Compliant escalation** | Dynamic policy engine that triggers instant white-glove Slack operations handoffs for high-risk anomalies, fraud flags, and enterprise accounts ($5,000+ LTV). |
+| **Strict stopping rules** | Segment-specific retry caps (1 retry for Trials, 3 for Standard, 5 for Enterprise) and hard failure breakers to prevent spamming or brand erosion. |
+| **Complete audit trail** | Immutable, searchable `action_logs` recording every outbound touchpoint (Email, SMS, Payment Link, Slack alert) with timestamped delivery state. |
 
 ---
 
