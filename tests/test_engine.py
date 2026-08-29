@@ -118,6 +118,41 @@ async def test_all():
 
     print("[PASS] Auto-Resolution loop test passed!")
 
+    # 6. Test DND / Channel Preference Gate
+    print("\n--- 6. Testing DND / Channel Preference Compliance ---")
+    ts_dnd = int(time.time() * 1000)
+    ev_dnd_id = f"test_dnd_{ts_dnd}"
+    canonical_dnd = {
+        "event_id": ev_dnd_id,
+        "customer_id": "cus_dnd_09",
+        "event_type": "payment_failed",
+        "amount_usd": 250.00,
+        "currency": "USD",
+        "raw_error_code": "card_expired",
+        "raw_error_message": "Card expired"
+    }
+    async with pool.acquire() as conn:
+        await conn.execute(
+            """
+            INSERT INTO raw_events (event_id, event_type, customer_id, payload, canonical_event, is_processed) 
+            VALUES ($1, $2, $3, $4, $5, FALSE)
+            """,
+            ev_dnd_id, "payment_failed", "cus_dnd_09", json.dumps(canonical_dnd), json.dumps(canonical_dnd)
+        )
+    await process_event(ev_dnd_id)
+
+    async with pool.acquire() as conn:
+        dnd_email_log = await conn.fetchrow("SELECT * FROM action_logs WHERE customer_id = 'cus_dnd_09' AND action_type IN ('email_sent', 'email_failed')")
+        print(f"DND Email Dispatched: {dnd_email_log is not None}")
+        assert dnd_email_log is not None, "Email should be attempted as per preferences"
+        
+        # Verify SMS was not sent for cus_dnd_09 (opted out of SMS)
+        sms_sent = await conn.fetchrow("SELECT * FROM action_logs WHERE customer_id = 'cus_dnd_09' AND action_type = 'sms_sent'")
+        print(f"DND SMS Suppressed: {sms_sent is None}")
+        assert sms_sent is None, "SMS should be suppressed for DND customer"
+
+    print("[PASS] DND / Channel Preference Gate test passed!")
+
     print("\n==================================================")
     print("[SUCCESS] ALL TESTS PASSED! ENGINE IS 100% OPERATIONAL.")
     print("==================================================")

@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS customers (
     customer_id TEXT PRIMARY KEY,
     email TEXT,
     phone TEXT,
-    crm_data JSONB
+    crm_data JSONB,
+    contact_preferences JSONB
 );
 
 CREATE TABLE IF NOT EXISTS raw_events (
@@ -167,6 +168,12 @@ async def ensure_schema(db_pool):
                     await conn.execute(stmt)
                 except Exception as e:
                     print(f"[DB] Schema migration notice on '{stmt[:30]}...': {e}")
+        
+        # Migration: Ensure contact_preferences column exists on customers table
+        try:
+            await conn.execute("ALTER TABLE customers ADD COLUMN contact_preferences TEXT")
+        except Exception:
+            pass  # Already exists or dialect handles it
 
 
 async def init_db():

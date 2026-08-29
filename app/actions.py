@@ -314,28 +314,30 @@ async def escalate_to_human(
     amount: float = 0.0,
     segment: str = "standard"
 ) -> dict:
-    """Alerts operations and account managers in Slack for human intervention."""
+    """Alerts operations and account managers in Slack for human intervention with closed-loop resolve link."""
     print(f"[ACTION][Slack] Escalating Case #{case_id} ({customer_id}) to human team.")
     
+    resolve_endpoint = f"/admin/resolve/{case_id}"
     text = (
         f"🚨 *Revenue Recovery Escalation*\n"
         f"• *Customer:* `{customer_id}` ({segment.upper()} segment)\n"
         f"• *Case ID:* `#{case_id}`\n"
         f"• *Amount at Risk:* `${amount:.2f}`\n"
         f"• *Reason:* {reason}\n"
-        f"👉 *Action Required:* Please review case in dashboard and contact the customer directly."
+        f"👉 *Action Required:* Please review case in dashboard and contact the customer directly.\n"
+        f"🔄 *Ops Feedback / Resolution:* Call `POST {resolve_endpoint}` or click Resolve in Dashboard once handled."
     )
     
     if DRY_RUN or not slack_client:
-        print(f"   [DRY RUN] Would send Slack alert: {reason}")
-        await log_action(case_id, customer_id, "escalated_to_slack", "slack", "ops_channel", {"reason": reason, "mock": True}, "success", "Mock Slack escalation")
+        print(f"   [DRY RUN] Would send Slack alert: {reason} | Ops resolve link: {resolve_endpoint}")
+        await log_action(case_id, customer_id, "escalated_to_slack", "slack", "ops_channel", {"reason": reason, "resolve_endpoint": resolve_endpoint, "mock": True}, "success", f"Slack escalation dispatched with ops resolve link {resolve_endpoint}")
         return {"success": True, "dry_run": True}
     
     try:
         response = await asyncio.to_thread(slack_client.send, text=text)
         success = response.status_code == 200
         print(f"   [Slack] Escalation sent. Status: {response.status_code}")
-        await log_action(case_id, customer_id, "escalated_to_slack", "slack", "ops_channel", {"status_code": response.status_code}, "success" if success else "failed")
+        await log_action(case_id, customer_id, "escalated_to_slack", "slack", "ops_channel", {"status_code": response.status_code, "resolve_endpoint": resolve_endpoint}, "success" if success else "failed")
         return {"success": success}
     except Exception as e:
         print(f"   [Slack] Error: {e}")
@@ -374,27 +376,57 @@ async def notify_recovery_success(
 
 
 # ============================================================
-# HELPER: CUSTOMER LOOKUP
+# HELPER: CUSTOMER LOOKUP & DND PREFERENCES
 # ============================================================
 async def get_customer_contact(customer_id: str) -> dict:
-    """Fetches customer email, phone, and CRM profile from the database."""
+    """Fetches customer email, phone, CRM profile, and contact preferences from the database."""
     from app.db import get_pool
     pool = await get_pool()
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
-            "SELECT email, phone, crm_data FROM customers WHERE customer_id = $1",
+            "SELECT * FROM customers WHERE customer_id = $1",
             customer_id
         )
         if row:
-            crm = row['crm_data']
+            crm = row.get('crm_data') if isinstance(row, dict) or hasattr(row, 'get') else row['crm_data']
             if isinstance(crm, str):
                 try:
                     crm = json.loads(crm)
                 except Exception:
                     crm = {}
+            elif not isinstance(crm, dict):
+                crm = {}
+                
+            # Fetch contact preferences (checking dedicated column or crm_data)
+            prefs = None
+            try:
+                prefs = row['contact_preferences']
+            except (KeyError, IndexError):
+                prefs = None
+                
+            if isinstance(prefs, str):
+                try:
+                    prefs = json.loads(prefs)
+                except Exception:
+                    prefs = None
+            elif not isinstance(prefs, dict):
+                prefs = None
+                
+            if not prefs:
+                prefs = crm.get('contact_preferences', {"email": True, "sms": True})
+                
             return {
                 "email": row['email'],
                 "phone": row['phone'],
-                "crm_data": crm or {}
+                "crm_data": crm or {},
+                "contact_preferences": {
+                    "email": prefs.get("email", True),
+                    "sms": prefs.get("sms", True)
+                }
             }
-    return {"email": None, "phone": None, "crm_data": {}}
+    return {
+        "email": None, 
+        "phone": None, 
+        "crm_data": {}, 
+        "contact_preferences": {"email": True, "sms": True}
+    }

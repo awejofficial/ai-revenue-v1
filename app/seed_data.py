@@ -107,8 +107,25 @@ SAMPLE_CUSTOMERS = [
             "ltv": 4500,
             "segment": "standard",
             "plan": "b2b_freight_saas",
-            "country": "IN"
-        }
+            "country": "IN",
+            "contact_preferences": {"email": True, "sms": False}
+        },
+        "contact_preferences": {"email": True, "sms": False}
+    },
+    {
+        "customer_id": "cus_dnd_09",
+        "email": "alex.dnd@enterpriseoptout.com",
+        "phone": "+14155559090",
+        "crm_data": {
+            "name": "Alex Mercer",
+            "company": "Mercer Advisory",
+            "ltv": 6200,
+            "segment": "high_ltv",
+            "plan": "enterprise_annual",
+            "country": "US",
+            "contact_preferences": {"email": True, "sms": False}
+        },
+        "contact_preferences": {"email": True, "sms": False}
     }
 ]
 
@@ -119,16 +136,22 @@ async def seed():
     async with pool.acquire() as conn:
         print("[Seed] Seeding customer directory...")
         for c in SAMPLE_CUSTOMERS:
+            prefs = c.get("contact_preferences") or {"email": True, "sms": True}
             await conn.execute(
                 """
-                INSERT INTO customers (customer_id, email, phone, crm_data) 
-                VALUES ($1, $2, $3, $4) 
-                ON CONFLICT (customer_id) DO NOTHING
+                INSERT INTO customers (customer_id, email, phone, crm_data, contact_preferences) 
+                VALUES ($1, $2, $3, $4, $5) 
+                ON CONFLICT (customer_id) DO UPDATE 
+                SET email = EXCLUDED.email, 
+                    phone = EXCLUDED.phone, 
+                    crm_data = EXCLUDED.crm_data, 
+                    contact_preferences = EXCLUDED.contact_preferences
                 """,
                 c['customer_id'], 
                 c['email'], 
                 c['phone'], 
-                json.dumps(c['crm_data'])
+                json.dumps(c['crm_data']),
+                json.dumps(prefs)
             )
             
         print(f"[Seed] Successfully seeded {len(SAMPLE_CUSTOMERS)} diverse customer profiles.")

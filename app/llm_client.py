@@ -14,8 +14,8 @@ if GEMINI_API_KEY:
         import google.generativeai as genai
         genai.configure(api_key=GEMINI_API_KEY)
         
-        # Try prioritized modern Gemini models
-        for model_name in ['gemini-3.5-flash', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-flash-latest']:
+        # Try prioritized modern Gemini models (Gemini 3.7 / 3.6 / 3.5 Flash)
+        for model_name in ['gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-flash-latest']:
             try:
                 model = genai.GenerativeModel(model_name)
                 print(f"[LLM] Configured Google Gemini model: '{model_name}'")

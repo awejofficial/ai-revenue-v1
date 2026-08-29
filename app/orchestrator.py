@@ -269,10 +269,14 @@ async def process_event(event_id: str):
         decision = apply_policy(dict(case), diagnosis, context)
         print(f"[Orchestrator] Case #{case_id} Decision: {decision['action']} | Reasoning: {decision['reasoning']}")
         
-        # 6. EXECUTION
+        # 6. EXECUTION & CHANNEL PREFERENCE GATES
         contact = await get_customer_contact(customer_id)
         email = contact.get('email')
         phone = contact.get('phone')
+        prefs = contact.get('contact_preferences', {"email": True, "sms": True})
+        
+        email_allowed = bool(email and prefs.get("email", True))
+        sms_allowed = bool(phone and prefs.get("sms", True))
         
         new_status = "awaiting_input"
         last_action = ""
@@ -286,8 +290,8 @@ async def process_event(event_id: str):
                 customer_id=customer_id,
                 amount_usd=amount,
                 currency=currency,
-                email=email,
-                phone=phone,
+                email=email if email_allowed else None,
+                phone=phone if sms_allowed else None,
                 case_id=case_id,
                 description=f"Recovery for Case #{case_id}"
             )
@@ -295,8 +299,8 @@ async def process_event(event_id: str):
             pay_url = link_res.get('payment_link', '')
             action_parts = []
             
-            # Send Email
-            if email:
+            # Send Email (if opted-in)
+            if email_allowed:
                 email_html = f"""
                 <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
                   <h2 style="color: #1a1a1a;">Payment Recovery Notification</h2>
@@ -312,15 +316,21 @@ async def process_event(event_id: str):
                 """
                 await send_email(email, f"Action Required: Complete your payment of {currency} {amount:.2f}", email_html, pay_url, case_id, customer_id)
                 action_parts.append(f"Email sent to {email}")
+            elif email:
+                await log_action(case_id, customer_id, "email_skipped_dnd", "email", email, {"reason": "Customer opted out of email dunning"}, "skipped", "Email skipped due to DND preferences")
+                action_parts.append("Email skipped (DND opt-out)")
             
-            # Send SMS
-            if phone:
+            # Send SMS (if opted-in)
+            if sms_allowed:
                 sms_text = f"Payment of {currency} {amount:.2f} failed. Pay securely here: {pay_url}"
                 await send_sms(phone, sms_text, case_id, customer_id)
                 action_parts.append(f"SMS sent to {phone}")
+            elif phone:
+                await log_action(case_id, customer_id, "sms_skipped_dnd", "sms", phone, {"reason": "Customer opted out of SMS dunning"}, "skipped", "SMS skipped due to DND preferences")
+                action_parts.append("SMS skipped (DND opt-out)")
             
             last_action = f"Generated {link_res.get('gateway', 'PSP')} link: {', '.join(action_parts) if action_parts else pay_url}"
-            new_status = 'awaiting_input' if (email or phone) else 'retrying'
+            new_status = 'awaiting_input' if (email_allowed or sms_allowed) else 'retrying'
             schedule_next = datetime.utcnow() + timedelta(hours=delay_hrs)
             retry_increment = 1
             
@@ -330,8 +340,8 @@ async def process_event(event_id: str):
                 customer_id=customer_id,
                 amount_usd=amount,
                 currency=currency,
-                email=email,
-                phone=phone,
+                email=email if email_allowed else None,
+                phone=phone if sms_allowed else None,
                 case_id=case_id,
                 description=f"Checkout Recovery for Case #{case_id}"
             )
@@ -341,7 +351,7 @@ async def process_event(event_id: str):
             has_discount = "RECOVER10" in decision.get('reasoning', '')
             discount_badge = '<div style="background:#E6F4EA;color:#137333;padding:8px 12px;border-radius:4px;font-weight:bold;margin:12px 0;">🎉 Applied Promo Code: RECOVER10 (10% Instant Off)</div>' if has_discount else ''
             
-            if email:
+            if email_allowed:
                 email_html = f"""
                 <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e0e0e0; border-radius: 8px;">
                   <h2 style="color: #1a1a1a; margin-top:0;">You left items in your cart!</h2>
@@ -357,19 +367,25 @@ async def process_event(event_id: str):
                 """
                 await send_email(email, f"🛒 Complete your order of {currency} {amount:.2f} (Saved for you)", email_html, pay_url, case_id, customer_id)
                 action_parts.append(f"Cart Recovery Email sent to {email}")
+            elif email:
+                await log_action(case_id, customer_id, "email_skipped_dnd", "email", email, {"reason": "Customer opted out of email outreach"}, "skipped", "Cart recovery email skipped due to DND preferences")
+                action_parts.append("Email skipped (DND opt-out)")
             
-            if phone:
+            if sms_allowed:
                 sms_text = f"You left items in your cart ({currency} {amount:.2f})! Complete checkout in 1 tap: {pay_url}"
                 await send_sms(phone, sms_text, case_id, customer_id)
                 action_parts.append(f"Cart Recovery SMS sent to {phone}")
+            elif phone:
+                await log_action(case_id, customer_id, "sms_skipped_dnd", "sms", phone, {"reason": "Customer opted out of SMS outreach"}, "skipped", "Cart recovery SMS skipped due to DND preferences")
+                action_parts.append("SMS skipped (DND opt-out)")
                 
             last_action = f"Dispatched 1-Click Checkout Recovery: {', '.join(action_parts) if action_parts else pay_url}"
-            new_status = 'awaiting_input'
+            new_status = 'awaiting_input' if (email_allowed or sms_allowed) else 'retrying'
             schedule_next = datetime.utcnow() + timedelta(hours=delay_hrs)
             retry_increment = 1
 
         elif decision['action'] == 'send_email':
-            if email:
+            if email_allowed:
                 html = f"""
                 <p>Dear Customer,</p>
                 <p>We noticed an issue processing your subscription payment of {currency} {amount:.2f}.</p>
@@ -380,15 +396,21 @@ async def process_event(event_id: str):
                 last_action = f"Sent payment update email to {email}"
                 new_status = 'awaiting_input'
                 schedule_next = datetime.utcnow() + timedelta(hours=delay_hrs)
+            elif email:
+                await log_action(case_id, customer_id, "email_skipped_dnd", "email", email, {"reason": "Customer opted out of email dunning"}, "skipped", "Payment update email skipped due to DND preferences")
+                decision['action'] = 'human_handoff'
             else:
                 decision['action'] = 'human_handoff'
                 
         elif decision['action'] == 'send_sms':
-            if phone:
+            if sms_allowed:
                 await send_sms(phone, f"Action needed: Please update payment method for your account. Amount due: {currency} {amount:.2f}", case_id, customer_id)
                 last_action = f"Sent SMS alert to {phone}"
                 new_status = 'awaiting_input'
                 schedule_next = datetime.utcnow() + timedelta(hours=delay_hrs)
+            elif phone:
+                await log_action(case_id, customer_id, "sms_skipped_dnd", "sms", phone, {"reason": "Customer opted out of SMS dunning"}, "skipped", "SMS alert skipped due to DND preferences")
+                decision['action'] = 'human_handoff'
             else:
                 decision['action'] = 'human_handoff'
         
