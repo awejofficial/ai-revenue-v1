@@ -629,6 +629,30 @@ async def api_analytics():
                 "razorpay": {"name": "Razorpay (UPI / NetBanking)", "currency": "INR", "status": "active"}
             }
         }
+
+
+@app.get("/api/analytics/summary")
+@app.get("/api/analytics/summary/")
+async def api_analytics_summary():
+    """Returns summarized stats for dashboard analytics."""
+    return await dashboard_stats()
+
+
+@app.get("/api/analytics/by-reason")
+@app.get("/api/analytics/by-reason/")
+async def api_analytics_by_reason():
+    """Returns failure breakdown by root cause reason."""
+    analytics = await api_analytics()
+    return analytics.get("failure_codes", {})
+
+
+@app.post("/api/simulate/recovery")
+@app.post("/api/simulate/recovery/")
+async def api_simulate_recovery(scenario: str = "payment_succeeded"):
+    """Simulates recovery event."""
+    return await simulate_event(scenario=scenario)
+
+
 @app.get("/dashboard/cases")
 @app.get("/dashboard/cases/")
 async def dashboard_cases(limit: int = 30):

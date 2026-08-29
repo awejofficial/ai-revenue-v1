@@ -7,6 +7,12 @@
       ]
     },
     {
+      "source": "shadcn/ui",
+      "skills": [
+        "shadcn"
+      ]
+    },
+    {
       "source": "uizze.com",
       "skills": [
         "anti-ui-slop"
