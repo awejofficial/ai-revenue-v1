@@ -1,0 +1,22 @@
+{
+  "skills": [
+    {
+      "source": "mattpocock/skills",
+      "skills": [
+        "improve-codebase-architecture"
+      ]
+    },
+    {
+      "source": "uizze.com",
+      "skills": [
+        "anti-ui-slop"
+      ]
+    },
+    {
+      "source": "vercel-labs/agent-browser",
+      "skills": [
+        "agent-browser"
+      ]
+    }
+  ]
+}
