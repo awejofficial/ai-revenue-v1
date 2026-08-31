@@ -2,29 +2,24 @@
 
 import React, { useState } from "react"
 import {
-  ShieldCheck,
   ShieldAlert,
+  Search,
+  Send,
+  Check,
   AlertTriangle,
   Clock,
   MoreVertical,
-  Check,
-  Sparkles,
-  SlidersHorizontal,
-  Expand,
-  Search,
-  Send,
   CheckCircle2,
   ChevronDown,
-  Trophy,
-  ExternalLink,
+  ChevronUp,
+  Sparkles,
 } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
-import { getStatusBadge } from "./CasesLedger"
 import { formatMoney, formatDate, cn } from "@/lib/utils"
-import type { Case } from "@/types/api"
+import type { Case, CaseStatus } from "@/types/api"
 
 interface AuditDrawerProps {
   selectedCase: Case | null
@@ -39,6 +34,62 @@ interface TimelineNode {
   icon: React.ElementType
   iconStyle: string
   badge?: string
+}
+
+function getInspectorStatusBadge(status: CaseStatus) {
+  switch (status) {
+    case "resolved":
+      return (
+        <Badge
+          variant="outline"
+          className="rounded-full border-emerald-500/30 bg-emerald-50 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400"
+        >
+          Recovered
+        </Badge>
+      )
+    case "escalated":
+      return (
+        <Badge
+          variant="destructive"
+          className="rounded-full bg-destructive/15 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-destructive"
+        >
+          Escalated
+        </Badge>
+      )
+    case "retrying":
+      return (
+        <Badge
+          variant="outline"
+          className="rounded-full border-amber-500/30 bg-amber-50/80 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+        >
+          Retrying
+        </Badge>
+      )
+    case "awaiting_input":
+      return (
+        <Badge
+          variant="outline"
+          className="rounded-full border-amber-500/30 bg-amber-50/80 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+        >
+          Awaiting Action
+        </Badge>
+      )
+    case "diagnosing":
+      return (
+        <Badge
+          variant="secondary"
+          className="rounded-full border-border bg-muted px-2.5 py-0.5 font-mono text-[11px] font-semibold text-muted-foreground"
+        >
+          Diagnosing
+        </Badge>
+      )
+    default:
+      return (
+        <Badge variant="outline" className="rounded-full border-border font-mono text-[11px] text-muted-foreground">
+          {status}
+        </Badge>
+      )
+  }
 }
 
 export const AuditDrawer: React.FC<AuditDrawerProps> = ({
@@ -74,7 +125,7 @@ export const AuditDrawer: React.FC<AuditDrawerProps> = ({
   const isResolved = selectedCase.status === "resolved"
   const isEscalated = selectedCase.status === "escalated"
 
-  // Build Timeline Nodes matching inspiration screenshot
+  // Build Timeline Nodes with Circular Icons matching design
   const timelineNodes: TimelineNode[] = [
     {
       id: "node_detected",
@@ -98,7 +149,7 @@ export const AuditDrawer: React.FC<AuditDrawerProps> = ({
       time: formatDate(selectedCase.updated_at),
       title: "Autonomous Outreach Dispatched",
       description:
-        selectedCase.last_action || `Payment verified via ${selectedCase.case_type}`,
+        selectedCase.last_action || `Payment update dispatched for ${selectedCase.customer_id}`,
       icon: Send,
       iconStyle: "bg-foreground text-background",
     },
@@ -135,45 +186,23 @@ export const AuditDrawer: React.FC<AuditDrawerProps> = ({
       {/* Card Header matching inspiration */}
       <CardHeader className="border-b border-border/60 p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
-            {/* Top Left Icon Container */}
-            <div
-              className={cn(
-                "flex size-10 items-center justify-center rounded-xl border",
-                isResolved
-                  ? "border-emerald-500/30 bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400"
-                  : isEscalated
-                  ? "border-rose-500/30 bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400"
-                  : "border-blue-500/30 bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
-              )}
-            >
-              {isResolved ? (
-                <ShieldCheck className="size-5" />
-              ) : isEscalated ? (
-                <AlertTriangle className="size-5" />
-              ) : (
-                <Clock className="size-5" />
-              )}
+          <div>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <CardTitle className="text-lg font-bold text-foreground sm:text-xl">
+                {selectedCase.customer_id}
+              </CardTitle>
+              {getInspectorStatusBadge(selectedCase.status)}
             </div>
-
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <CardTitle className="text-base font-bold sm:text-lg">
-                  {selectedCase.customer_id}
-                </CardTitle>
-                {getStatusBadge(selectedCase.status)}
-              </div>
-              <CardDescription className="font-mono text-xs text-muted-foreground">
-                Case #{selectedCase.case_id} · {selectedCase.case_type} ·{" "}
-                {formatMoney(selectedCase.amount_usd)}
-              </CardDescription>
-            </div>
+            <CardDescription className="mt-1 font-mono text-xs text-muted-foreground">
+              Case #{selectedCase.case_id} · {selectedCase.case_type} ·{" "}
+              {formatMoney(selectedCase.amount_usd)}
+            </CardDescription>
           </div>
 
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
-            className="size-8 rounded-lg border-border/80 text-muted-foreground hover:text-foreground"
+            className="size-8 rounded-lg text-muted-foreground hover:text-foreground"
             aria-label="More Options"
           >
             <MoreVertical className="size-4" />
@@ -182,8 +211,8 @@ export const AuditDrawer: React.FC<AuditDrawerProps> = ({
       </CardHeader>
 
       <CardContent className="space-y-4 p-4 sm:p-5">
-        {/* 4-Column Specifications Matrix with Dividers and Subtext */}
-        <div className="grid grid-cols-2 gap-3 rounded-xl border border-border/80 p-3 sm:grid-cols-4 sm:gap-0 sm:divide-x sm:divide-border/60">
+        {/* 4-Column Specifications Matrix matching inspiration */}
+        <div className="grid grid-cols-2 gap-3 rounded-xl border border-border/80 p-4 sm:grid-cols-4 sm:gap-0 sm:divide-x sm:divide-border/60">
           {/* RETRIES */}
           <div className="flex flex-col items-center justify-center px-2 text-center">
             <span className="font-mono text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
@@ -203,7 +232,7 @@ export const AuditDrawer: React.FC<AuditDrawerProps> = ({
             <span className="font-mono text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
               Next Action
             </span>
-            <p className="mt-1 text-sm font-bold text-foreground truncate max-w-full">
+            <p className="mt-1 text-xs font-bold text-foreground truncate max-w-full sm:text-sm">
               {selectedCase.scheduled_next_action_at
                 ? formatDate(selectedCase.scheduled_next_action_at)
                 : "N/A"}
@@ -232,11 +261,11 @@ export const AuditDrawer: React.FC<AuditDrawerProps> = ({
             <span className="font-mono text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
               Updated
             </span>
-            <p className="mt-1 text-xs font-semibold text-foreground truncate max-w-full">
+            <p className="mt-1 text-xs font-bold text-foreground truncate max-w-full sm:text-sm">
               {formatDate(selectedCase.updated_at)}
             </p>
-            <div className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
-              <Clock className="size-3" />
+            <div className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <span className="size-1.5 rounded-full bg-muted-foreground/60" />
               <span>Live sync</span>
             </div>
           </div>
@@ -244,12 +273,12 @@ export const AuditDrawer: React.FC<AuditDrawerProps> = ({
 
         {/* AI Diagnostic Intelligence Callout */}
         {selectedCase.llm_reasoning && (
-          <div className="flex items-start gap-3 rounded-xl border border-blue-500/25 bg-blue-50/50 p-3.5 dark:bg-blue-950/25">
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-500/15 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400">
-              <Sparkles className="size-4" />
+          <div className="flex items-start gap-3.5 rounded-xl border border-blue-500/20 bg-blue-50/40 p-4 dark:bg-blue-950/20">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-100/70 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400">
+              <Sparkles className="size-4.5" />
             </div>
-            <div className="space-y-0.5">
-              <h4 className="text-xs font-bold text-blue-700 dark:text-blue-400">
+            <div className="space-y-1">
+              <h4 className="text-xs font-bold text-blue-600 dark:text-blue-400">
                 AI Diagnostic Intelligence & Policy Bounds
               </h4>
               <p className="text-xs text-foreground/90 leading-relaxed">
@@ -260,43 +289,40 @@ export const AuditDrawer: React.FC<AuditDrawerProps> = ({
         )}
 
         {/* Lifecycle Audit Stream Header */}
-        <div className="pt-1">
+        <div className="pt-2">
           <div className="flex items-center justify-between pb-3">
-            <div className="flex items-center gap-2">
-              <SlidersHorizontal className="size-4 text-foreground" />
-              <h4 className="text-sm font-bold text-foreground">Lifecycle Audit Stream</h4>
-            </div>
+            <h4 className="text-base font-bold text-foreground">Lifecycle Audit Stream</h4>
 
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setExpandedAll(!expandedAll)}
-              className="h-7 gap-1 rounded-md px-2 text-[11px] font-medium text-muted-foreground hover:text-foreground"
+              className="h-7 gap-1 rounded-md px-2 text-xs font-medium text-muted-foreground hover:text-foreground"
             >
-              <Expand className="size-3" />
+              {expandedAll ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
               <span>{expandedAll ? "Collapse all" : "Expand all"}</span>
             </Button>
           </div>
 
-          {/* Timeline Nodes Connected with Vertical Guide */}
+          {/* Timeline Nodes with Circular Icons on Vertical Track */}
           <div className="relative ml-3 space-y-6 border-l-2 border-border/80 pl-6">
             {timelineNodes.map((node) => {
               const NodeIcon = node.icon
               return (
                 <div key={node.id} className="relative group">
-                  {/* Circular Node Icon on Line */}
+                  {/* Circular Node Icon on Timeline Line */}
                   <span
                     className={cn(
-                      "absolute -left-[35px] top-0 flex size-6.5 items-center justify-center rounded-full shadow-2xs ring-4 ring-background",
+                      "absolute -left-[35px] top-0.5 flex size-6.5 items-center justify-center rounded-full shadow-2xs ring-4 ring-background",
                       node.iconStyle
                     )}
                   >
                     <NodeIcon className="size-3.5" />
                   </span>
 
-                  <div className="space-y-1">
+                  <div className="space-y-0.5">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-mono text-[10px] font-medium text-muted-foreground">
+                      <span className="font-mono text-[11px] font-medium text-muted-foreground">
                         {node.time}
                       </span>
                       <ChevronDown className="size-3.5 text-muted-foreground/60 transition-transform group-hover:text-foreground" />
@@ -315,7 +341,7 @@ export const AuditDrawer: React.FC<AuditDrawerProps> = ({
                     </div>
 
                     {expandedAll && (
-                      <p className="text-xs text-muted-foreground leading-relaxed">
+                      <p className="text-xs text-muted-foreground leading-relaxed pt-0.5">
                         {node.description}
                       </p>
                     )}
@@ -327,66 +353,30 @@ export const AuditDrawer: React.FC<AuditDrawerProps> = ({
         </div>
 
         {/* Bottom Banner matching inspiration */}
-        <div
-          className={cn(
-            "mt-2 flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3.5",
-            isResolved
-              ? "border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20"
-              : "border-border/80 bg-muted/30"
-          )}
-        >
-          <div className="flex items-center gap-3">
-            <div
-              className={cn(
-                "flex size-9 items-center justify-center rounded-xl",
-                isResolved
-                  ? "bg-emerald-500/15 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400"
-                  : "bg-muted text-muted-foreground"
-              )}
-            >
-              <Trophy className="size-4.5" />
-            </div>
-
-            <div>
-              <p
-                className={cn(
-                  "text-xs font-bold",
-                  isResolved
-                    ? "text-emerald-900 dark:text-emerald-300"
-                    : "text-foreground"
-                )}
-              >
-                {isResolved ? "Case Resolved Successfully" : "Case Active in Dunning Cycle"}
-              </p>
-              <p className="text-[11px] text-muted-foreground">
-                {isResolved
-                  ? "Inbound revenue recovered and customer retained."
-                  : "Monitoring autonomous touchpoints and webhook events."}
-              </p>
-            </div>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/80 bg-card p-4 shadow-2xs">
+          <div>
+            <p className="text-xs font-bold text-foreground">
+              {isResolved ? "Case Resolved Successfully" : "Case Active in Dunning Cycle"}
+            </p>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              {isResolved
+                ? "Inbound revenue recovered and customer retained."
+                : "Monitoring autonomous touchpoints and webhook events."}
+            </p>
           </div>
 
-          {isResolved ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 gap-1.5 rounded-lg border-border/80 text-xs font-semibold shadow-2xs"
-            >
-              <span>View Case Details</span>
-              <ExternalLink className="size-3" />
-            </Button>
-          ) : (
+          {!isResolved && (
             <Button
               variant="default"
               size="sm"
               disabled={resolving}
               onClick={handleResolve}
-              className="h-8 gap-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 shadow-2xs"
+              className="h-9 gap-1.5 rounded-lg bg-emerald-600 px-4 text-xs font-semibold text-white shadow-xs hover:bg-emerald-700"
             >
               {resolving ? (
                 <Spinner data-icon="inline-start" />
               ) : (
-                <CheckCircle2 data-icon="inline-start" className="size-3.5" />
+                <CheckCircle2 data-icon="inline-start" className="size-4" />
               )}
               Mark Resolved
             </Button>

@@ -589,8 +589,8 @@ async def api_analytics():
             elif 'stripe' in ch:
                 channels["stripe"] += 1
                 
-        # Failure code breakdown
-        raw_events = await conn.fetch("SELECT canonical_event FROM raw_events LIMIT 100")
+        # Failure code breakdown across all raw events
+        raw_events = await conn.fetch("SELECT canonical_event FROM raw_events")
         failure_codes = {"insufficient_funds": 0, "card_expired": 0, "checkout_drop_off": 0, "suspected_fraud": 0, "other": 0}
         for ev in raw_events:
             c = ev['canonical_event']
