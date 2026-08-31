@@ -13,7 +13,8 @@
 [![SQLite](https://img.shields.io/badge/SQLite-Zero--Config-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://sqlite.org)
 [![Stripe](https://img.shields.io/badge/Stripe-Live%20Ready-635BFF?style=for-the-badge&logo=stripe&logoColor=white)](https://stripe.com)
 [![Razorpay](https://img.shields.io/badge/Razorpay-Live%20Ready-0C2340?style=for-the-badge&logo=razorpay&logoColor=white)](https://razorpay.com)
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
+[![Render](https://img.shields.io/badge/Backend-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://render.com)
+[![Vercel](https://img.shields.io/badge/Frontend-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com)
 
 **An autonomous, production-ready Revenue Recovery & Intelligent Dunning Platform for modern SaaS & E-Commerce businesses.**  
 *Find revenue that's slipping away and win it back: From payment degradation and failed subscriptions to B2B receivables and checkout drop-offs.*
@@ -38,11 +39,11 @@
 | **SendGrid Email** | 🟢 Live Ready | Personalized HTML recovery emails with dynamic payment links and promo codes. |
 | **Twilio SMS** | 🟢 Live Ready | Shortlink SMS recovery messages with customer context. |
 | **Slack Ops Escalation** | 🟢 Live Ready | Rich Slack webhook payloads with 1-click resolve feedback links for operations teams. |
-| **PostgreSQL (asyncpg)** | 🟢 Live | Async connection pooling with auto-migrations on startup. |
+| **PostgreSQL (asyncpg)** | 🟢 Live | Async connection pooling with auto-migrations on startup (supports Render Managed PostgreSQL). |
 | **SQLite (Zero-Config)** | 🟢 Live | Automatic fallback for local development — no database install required. |
 | **Webhook Intake** | 🟢 Live | `/webhooks/psp` (Stripe & Razorpay) and `/webhooks/billing` (ERP/Invoicing) endpoints ready to receive production traffic. |
 | **Closed-Loop Auto-Resolution** | 🟢 Live | Inbound success webhooks automatically resolve cases, update recovery metrics, and terminate dunning sequences. |
-| **Docker Compose** | 🟢 Live | Full-stack orchestration (FastAPI + PostgreSQL 16 + Redis 7) with single-command deployment. |
+| **Render & Vercel Deployment** | 🟢 Live | Cloud infrastructure with Render (FastAPI + Managed PostgreSQL) and Vercel (React 19 Vite SPA). |
 | **React 19 + shadcn/ui Frontend** | 🟢 Live | Modern, accessible SPA with dark mode, responsive design, and real-time polling. |
 
 ### The `DRY_RUN` Switch
@@ -107,7 +108,7 @@ The **Autonomous AI Revenue Recovery Agent** bridges deterministic payment logic
 | 🗄️ **Dual Database Architecture** | Zero-friction local development using SQLite fallback with automated startup migrations, and production-ready async PostgreSQL (`asyncpg`). |
 | ⚛️ **Modern React 19 + shadcn/ui Frontend** | Accessible, responsive SPA with dark/light theme toggle, real-time polling, CSV log export, and mobile-optimized touch targets. |
 | 📋 **CSV Audit Log Export** | Export recent action logs to CSV with formula injection protection for secure offline analysis and compliance reporting. |
-| 🐳 **Docker Compose Deployment** | One-command full-stack deployment with FastAPI, PostgreSQL 16 Alpine, and Redis 7 Alpine. |
+| 🚀 **Render & Vercel Cloud Deployment** | Zero-hassle cloud deployment with Render (FastAPI + Managed PostgreSQL) and Vercel (React 19 Vite SPA). |
 
 ---
 
@@ -277,12 +278,12 @@ ai-revenue-v1/
 │   │   ├── App.tsx           # Root app with routing and theme provider
 │   │   └── main.tsx          # Vite entry point
 │   ├── package.json          # React 19, Vite 8, shadcn/ui, Recharts
+│   ├── vercel.json           # Vercel SPA routing rewrites configuration
 │   └── vite.config.ts        # Vite config with API proxy to backend
 ├── tests/
 │   ├── test_engine.py     # End-to-end engine unit and integration test suite
 │   └── test_api.py        # Async FastAPI API & simulator route tests
-├── Dockerfile             # Multi-stage production Docker image
-├── docker-compose.yml     # Full-stack orchestration (App + PostgreSQL + Redis)
+├── render.yaml            # Render Infrastructure-as-Code Blueprint (Backend + DB)
 ├── .env.example           # Configuration template for credentials & features
 ├── .gitignore             # Comprehensive security & environment ignore rules
 ├── requirements.txt       # Production Python dependencies
@@ -372,27 +373,41 @@ Access the application:
 - 🎛️ **Dashboard**: [http://localhost:5173](http://localhost:5173)
 - 📖 **API Docs (Swagger)**: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-> **RAM Usage (Native):** ~300MB total. No Docker overhead, no virtual machine — ideal for local development.
+---
 
-### 🐳 Docker Launch (Full Stack — Production)
+## 🚀 Cloud Deployment (Render + Vercel)
 
-Run the entire production stack (FastAPI + PostgreSQL 16 + Redis 7 + Auto-Migrations) with one command:
-```bash
-# Start all containers in the background
-docker compose up -d --build
+The platform is designed to deploy seamlessly with zero infrastructure headache:
 
-# View container logs
-docker compose logs -f web
+### Part 1: Deploy Backend & PostgreSQL on Render
 
-# Stop containers
-docker compose down
-```
+1. **Create Managed PostgreSQL Database:**
+   - On [Render](https://dashboard.render.com), click **New +** → **PostgreSQL**.
+   - Set Name: `ai-revenue-db`, Database: `revenue_db`, Plan: **Free**.
+   - Copy the **Internal Database URL**.
 
-> **RAM Usage (Docker):** ~1.5–2.5GB total (includes WSL 2 VM overhead on Windows).
+2. **Deploy FastAPI Web Service:**
+   - Click **New +** → **Web Service** and connect your GitHub repo.
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `python run_server.py`
+   - Add Environment Variables:
+     - `DATABASE_URL`: *(paste PostgreSQL URL from Step 1)*
+     - `GEMINI_API_KEY`: *(your Gemini API key)*
+     - `DRY_RUN`: `true` *(or `false` for live mode)*
+     - `PYTHON_VERSION`: `3.11.9`
+   - Copy your public backend URL (e.g. `https://ai-revenue-backend.onrender.com`).
+
+### Part 2: Deploy React Frontend on Vercel
+
+1. On [Vercel](https://vercel.com), click **Add New...** → **Project** and import this repo.
+2. Edit **Root Directory** → Select **`frontend`**.
+3. Add Environment Variable:
+   - `VITE_API_BASE_URL`: `https://ai-revenue-backend.onrender.com` *(your Render backend URL)*
+4. Click **Deploy**.
 
 ---
 
-## 🚀 Going Live — Production Deployment
+## 🚀 Going Live — Production Gateways
 
 To switch from simulation to processing real payments:
 
@@ -409,21 +424,13 @@ SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
 ```
 
 ### Step 2: Configure Webhook Endpoints
-Point your payment gateway webhooks to your deployed URL:
+Point your payment gateway webhooks to your deployed Render URL:
 
 | Gateway | Webhook URL | Events to Subscribe |
 | :--- | :--- | :--- |
-| **Stripe** | `https://yourdomain.com/webhooks/psp` | `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.failed`, `charge.succeeded`, `checkout.session.completed`, `invoice.payment_succeeded` |
-| **Razorpay** | `https://yourdomain.com/webhooks/psp` | `payment.captured`, `payment.failed`, `payment_link.paid`, `order.paid` |
-| **ERP / Billing** | `https://yourdomain.com/webhooks/billing` | Overdue invoices, billing anomalies |
-
-### Step 3: Deploy
-```bash
-# Using Docker Compose (recommended for production)
-docker compose up -d --build
-
-# Or deploy to any cloud platform (Railway, Render, AWS, GCP, etc.)
-```
+| **Stripe** | `https://ai-revenue-backend.onrender.com/webhooks/psp` | `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.failed`, `charge.succeeded`, `checkout.session.completed`, `invoice.payment_succeeded` |
+| **Razorpay** | `https://ai-revenue-backend.onrender.com/webhooks/psp` | `payment.captured`, `payment.failed`, `payment_link.paid`, `order.paid` |
+| **ERP / Billing** | `https://ai-revenue-backend.onrender.com/webhooks/billing` | Overdue invoices, billing anomalies |
 
 ### What Happens When You Go Live
 1. **Real Stripe PaymentIntents** are created via `stripe.PaymentIntent.create()`
@@ -492,7 +499,7 @@ timeline
             : Checkout Drop-Off & 3DS Friction Recovery
             : Modern React 19 + shadcn/ui Frontend
             : Closed-Loop Webhook Auto-Resolution
-            : Docker Compose Full-Stack Deployment
+            : Render & Vercel Cloud Deployment
     Phase 2 : Predictive Pre-Dunning (15d Card Expiry Alerts)
             : Multi-PSP Smart Retry Routing (Approval Rate AI)
             : Dynamic Payday Scheduling Algorithm
