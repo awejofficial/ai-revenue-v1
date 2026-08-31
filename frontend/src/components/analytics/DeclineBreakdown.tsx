@@ -17,17 +17,20 @@ import type { AnalyticsFailureCodes } from "@/types/api"
 interface DeclineBreakdownProps {
   failureCodes?: AnalyticsFailureCodes
   loading?: boolean
+  onSelectCategory?: (categoryQuery: string) => void
 }
 
 export const DeclineBreakdown: React.FC<DeclineBreakdownProps> = ({
   failureCodes,
   loading = false,
+  onSelectCategory,
 }) => {
   const rows = [
     {
       label: "Checkout Drop-Offs & Abandoned Carts",
       description: "3DS authentication abandonments and cart friction timeouts",
       count: failureCodes?.checkout_drop_off || 0,
+      query: "drop_off",
       icon: ShoppingCart,
       iconContainer: "bg-rose-50 text-rose-600 border-rose-500/20 dark:bg-rose-950/40 dark:text-rose-400",
     },
@@ -35,6 +38,7 @@ export const DeclineBreakdown: React.FC<DeclineBreakdownProps> = ({
       label: "Insufficient Balance (Payday Retries)",
       description: "Transient declines scheduled for 72h payday alignment",
       count: failureCodes?.insufficient_funds || 0,
+      query: "insufficient",
       icon: CreditCard,
       iconContainer: "bg-blue-50 text-blue-600 border-blue-500/20 dark:bg-blue-950/40 dark:text-blue-400",
     },
@@ -42,6 +46,7 @@ export const DeclineBreakdown: React.FC<DeclineBreakdownProps> = ({
       label: "Expired Cards (Payment Update Links)",
       description: "Card validity in past; automated update links dispatched",
       count: failureCodes?.card_expired || 0,
+      query: "expired",
       icon: Clock,
       iconContainer: "bg-amber-50 text-amber-600 border-amber-500/20 dark:bg-amber-950/40 dark:text-amber-400",
     },
@@ -49,6 +54,7 @@ export const DeclineBreakdown: React.FC<DeclineBreakdownProps> = ({
       label: "Suspected Fraud / Risk Flags",
       description: "High-risk anomalies escalated directly to human team",
       count: failureCodes?.suspected_fraud || 0,
+      query: "fraud",
       icon: Flag,
       iconContainer: "bg-red-50 text-red-600 border-red-500/20 dark:bg-red-950/40 dark:text-red-400",
     },
@@ -56,6 +62,7 @@ export const DeclineBreakdown: React.FC<DeclineBreakdownProps> = ({
       label: "Other Gateway Declines / Edge Cases",
       description: "Processor-specific decline codes evaluated via Gemini AI",
       count: failureCodes?.other || 0,
+      query: "declined",
       icon: Zap,
       iconContainer: "bg-purple-50 text-purple-600 border-purple-500/20 dark:bg-purple-950/40 dark:text-purple-400",
     },
@@ -70,7 +77,7 @@ export const DeclineBreakdown: React.FC<DeclineBreakdownProps> = ({
           <div className="space-y-1">
             <CardTitle className="text-base font-bold">Root Cause Decline Breakdown</CardTitle>
             <CardDescription className="text-xs">
-              Diagnostic classification across all ingested payment failure events
+              Diagnostic classification across all ingested payment failure events · Click any row to filter ledger
             </CardDescription>
           </div>
 
@@ -106,7 +113,16 @@ export const DeclineBreakdown: React.FC<DeclineBreakdownProps> = ({
               return (
                 <div
                   key={idx}
-                  className="flex cursor-pointer items-center justify-between px-5 py-3.5 transition-colors hover:bg-muted/40"
+                  tabIndex={0}
+                  role="button"
+                  onClick={() => onSelectCategory?.(row.query)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault()
+                      onSelectCategory?.(row.query)
+                    }
+                  }}
+                  className="flex cursor-pointer items-center justify-between px-5 py-3.5 transition-colors hover:bg-muted/50 focus-visible:bg-muted/70 focus-visible:outline-hidden"
                 >
                   <div className="flex items-center gap-3.5">
                     <div

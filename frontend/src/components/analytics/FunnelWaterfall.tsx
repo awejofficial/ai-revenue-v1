@@ -20,6 +20,8 @@ export const FunnelWaterfall: React.FC<FunnelWaterfallProps> = ({
   const recoveredCases = funnel?.recovered_cases || 0
   const recoveryRate = funnel?.recovery_rate_pct || 0
 
+  const outreachPct = detected > 0 ? Math.min(100, Math.max(15, Math.round((touches / detected) * 100))) : 0
+
   const steps = [
     {
       num: "1",
@@ -44,7 +46,7 @@ export const FunnelWaterfall: React.FC<FunnelWaterfallProps> = ({
       badgeStyle: "border-orange-500/30 bg-orange-50 text-orange-600 dark:bg-orange-950/40 dark:text-orange-400",
       label: "Bounded Outreach Dispatched",
       count: `${touches} Touches Sent`,
-      percent: 82,
+      percent: outreachPct,
       barColor: "bg-orange-500",
       subtext: "Outreach Active",
     },

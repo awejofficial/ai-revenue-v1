@@ -16,6 +16,7 @@ import { MetricCard } from "@/components/layout/MetricCard"
 import { SimulationToolbar } from "@/components/dashboard/SimulationToolbar"
 import { CasesLedger } from "@/components/dashboard/CasesLedger"
 import { AuditDrawer } from "@/components/dashboard/AuditDrawer"
+import { RecentLogsCard } from "@/components/dashboard/RecentLogsCard"
 import { api } from "@/lib/api"
 import { formatMoney, formatPercent } from "@/lib/utils"
 import { toast } from "sonner"
@@ -23,9 +24,12 @@ import type { DashboardStats, Case, SimulationScenario } from "@/types/api"
 
 interface DashboardViewProps {
   onNavigateToAnalytics?: () => void
+  initialSearch?: string
 }
 
-export const DashboardView: React.FC<DashboardViewProps> = () => {
+export const DashboardView: React.FC<DashboardViewProps> = ({
+  initialSearch = "",
+}) => {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [cases, setCases] = useState<Case[]>([])
   const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null)
@@ -93,6 +97,7 @@ export const DashboardView: React.FC<DashboardViewProps> = () => {
       toast.success("Autonomous processing cycle completed", { id: "worker" })
       await loadData(true)
     } catch (err) {
+      console.error("Background worker error:", err)
       toast.error("Background worker failed to execute", { id: "worker" })
     } finally {
       setRunningWorker(false)
@@ -106,6 +111,7 @@ export const DashboardView: React.FC<DashboardViewProps> = () => {
       toast.success(`Case #${caseId} successfully marked as resolved!`, { id: "resolve" })
       await loadData(true)
     } catch (err) {
+      console.error("Resolve case error:", err)
       toast.error("Failed to manually resolve case", { id: "resolve" })
     }
   }
@@ -236,6 +242,7 @@ export const DashboardView: React.FC<DashboardViewProps> = () => {
           selectedCaseId={selectedCaseId}
           onSelectCase={setSelectedCaseId}
           loading={loading}
+          initialSearch={initialSearch}
         />
 
         <AuditDrawer
@@ -243,6 +250,9 @@ export const DashboardView: React.FC<DashboardViewProps> = () => {
           onResolveCase={handleResolveCase}
         />
       </div>
+
+      {/* Recent Action & Outreach Logs with CSV Export */}
+      <RecentLogsCard />
     </div>
   )
 }

@@ -20,7 +20,13 @@ import { formatMoney, formatPercent } from "@/lib/utils"
 import { toast } from "sonner"
 import type { AnalyticsData } from "@/types/api"
 
-export const AnalyticsView: React.FC = () => {
+interface AnalyticsViewProps {
+  onNavigateToDashboardWithFilter?: (filterQuery: string) => void
+}
+
+export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
+  onNavigateToDashboardWithFilter,
+}) => {
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -41,6 +47,8 @@ export const AnalyticsView: React.FC = () => {
 
   useEffect(() => {
     loadData()
+    const interval = setInterval(() => loadData(true), 15000)
+    return () => clearInterval(interval)
   }, [loadData])
 
   const f = data?.funnel
@@ -142,7 +150,11 @@ export const AnalyticsView: React.FC = () => {
       </div>
 
       {/* Root Cause Decline Reason Breakdown */}
-      <DeclineBreakdown failureCodes={data?.failure_codes} loading={loading} />
+      <DeclineBreakdown
+        failureCodes={data?.failure_codes}
+        loading={loading}
+        onSelectCategory={onNavigateToDashboardWithFilter}
+      />
     </div>
   )
 }

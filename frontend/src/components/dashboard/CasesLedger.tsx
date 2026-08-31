@@ -1,6 +1,4 @@
-// frontend/src/components/dashboard/CasesLedger.tsx
-
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Search, Inbox } from "lucide-react"
 import {
   Card,
@@ -28,6 +26,7 @@ interface CasesLedgerProps {
   selectedCaseId: number | null
   onSelectCase: (caseId: number) => void
   loading?: boolean
+  initialSearch?: string
 }
 
 export function getStatusBadge(status: CaseStatus) {
@@ -91,8 +90,15 @@ export const CasesLedger: React.FC<CasesLedgerProps> = ({
   selectedCaseId,
   onSelectCase,
   loading = false,
+  initialSearch = "",
 }) => {
-  const [search, setSearch] = useState("")
+  const [search, setSearch] = useState(initialSearch)
+
+  useEffect(() => {
+    if (initialSearch) {
+      setSearch(initialSearch)
+    }
+  }, [initialSearch])
 
   const filteredCases = cases.filter((c) => {
     const q = search.toLowerCase()

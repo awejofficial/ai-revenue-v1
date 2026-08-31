@@ -31,8 +31,8 @@ export const ChannelRoiMatrix: React.FC<ChannelRoiMatrixProps> = ({
   gateways,
   loading = false,
 }) => {
-  const stripeStatus = gateways?.stripe?.status === "active" ? "Active" : "Active"
-  const rzpStatus = gateways?.razorpay?.status === "active" ? "Active" : "Active"
+  const stripeStatus = gateways?.stripe?.status === "active" ? "Active" : "Inactive"
+  const rzpStatus = gateways?.razorpay?.status === "active" ? "Active" : "Inactive"
 
   const channelRows = [
     {
