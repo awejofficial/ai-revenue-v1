@@ -178,10 +178,14 @@ async def ensure_schema(db_pool):
 
 async def init_db():
     global pool
-    if DATABASE_URL and DATABASE_URL.startswith("postgresql"):
+    db_url = DATABASE_URL
+    if db_url and db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+        
+    if db_url and db_url.startswith("postgresql"):
         try:
             import asyncpg
-            pool = await asyncpg.create_pool(DATABASE_URL, min_size=5, max_size=25, timeout=10.0)
+            pool = await asyncpg.create_pool(db_url, min_size=2, max_size=20, timeout=10.0)
             print("[DB] Connected to PostgreSQL pool successfully.")
             await ensure_schema(pool)
             return pool

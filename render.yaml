@@ -1,0 +1,25 @@
+services:
+  # FastAPI Web Service
+  - type: web
+    name: ai-revenue-backend
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python run_server.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: DRY_RUN
+        value: "true"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ai-revenue-db
+          property: connectionString
+
+databases:
+  # Managed PostgreSQL Database
+  - name: ai-revenue-db
+    databaseName: revenue_db
+    user: revenue_user
+    plan: free

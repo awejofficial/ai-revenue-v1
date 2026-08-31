@@ -20,6 +20,7 @@ if sys.platform == "win32":
 from fastapi import FastAPI, Request, HTTPException, Query
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.db import init_db, get_pool
 from app.orchestrator import (
@@ -64,6 +65,15 @@ app = FastAPI(
     version="1.0.0",
     description="Autonomous AI-driven dunning and revenue recovery engine with Stripe, Razorpay, SendGrid, Twilio, and Slack integrations.",
     lifespan=lifespan
+)
+
+# Enable CORS for external frontends (e.g., Vercel, custom domains, and local dev)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Serve compiled authentic shadcn/ui frontend static assets if available
