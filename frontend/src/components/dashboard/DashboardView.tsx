@@ -128,10 +128,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-            Operations Console & Telemetry
+            Operations Hub
           </h2>
           <p className="text-xs text-muted-foreground sm:text-sm">
-            Real-time autonomous revenue recovery stream and dunning lifecycle supervisor.
+            Monitor active payment recovery cases, track won-back revenue, and test automated dunning.
           </p>
         </div>
 
@@ -152,10 +152,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             size="sm"
             disabled={runningWorker}
             onClick={handleRunWorker}
+            title="Check overdue cases and process scheduled retries now without waiting for the next cron cycle."
             className="h-8.5 gap-1.5 rounded-lg bg-foreground text-background text-xs font-semibold shadow-xs hover:bg-foreground/90"
           >
             {runningWorker ? <Spinner data-icon="inline-start" /> : <Play data-icon="inline-start" className="size-3.5 fill-current" />}
-            Run Background Worker
+            Run Recovery Worker
           </Button>
         </div>
       </div>

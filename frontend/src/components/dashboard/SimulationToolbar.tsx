@@ -40,13 +40,13 @@ export const SimulationToolbar: React.FC<SimulationToolbarProps> = ({
     },
     {
       id: "high_ltv_insufficient_funds",
-      label: "High-LTV Payday Retry",
+      label: "High-Value Retry",
       variant: "outline",
       icon: <Gem data-icon="inline-start" className="size-3.5 text-blue-600 dark:text-blue-400" />,
     },
     {
       id: "repeat_failure",
-      label: "Repeat Offender",
+      label: "Repeat Failure",
       variant: "outline",
       icon: <Repeat data-icon="inline-start" className="size-3.5 text-muted-foreground" />,
     },
@@ -65,13 +65,13 @@ export const SimulationToolbar: React.FC<SimulationToolbarProps> = ({
     },
     {
       id: "trial_user",
-      label: "Free Trial",
+      label: "Trial Expiration",
       variant: "outline",
       icon: <Clock data-icon="inline-start" className="size-3.5 text-muted-foreground" />,
     },
     {
       id: "payment_succeeded",
-      label: "Payment Success (Auto-Resolve)",
+      label: "Payment Succeeded (Auto-Resolve)",
       variant: "outline",
       customClass: "border-emerald-500/30 text-emerald-700 hover:bg-emerald-50/60 hover:text-emerald-800 dark:text-emerald-300",
       icon: <CheckCircle2 data-icon="inline-start" className="size-3.5 text-emerald-600 dark:text-emerald-400" />,
@@ -83,7 +83,7 @@ export const SimulationToolbar: React.FC<SimulationToolbarProps> = ({
       <CardContent className="flex flex-wrap items-center justify-between gap-3 p-3.5 sm:p-4">
         <div className="flex items-center gap-2 font-mono text-xs font-semibold text-foreground">
           <Play className="size-3.5 fill-primary text-primary" />
-          <span>1-Click Test Harness:</span>
+          <span>Test Scenarios:</span>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">

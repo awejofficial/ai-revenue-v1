@@ -88,9 +88,9 @@ export const CompactDeclineCard: React.FC<CompactDeclineCardProps> = ({
       <CardHeader className="border-b border-border/60 pb-3">
         <div className="flex items-center justify-between gap-2">
           <div className="space-y-0.5">
-            <CardTitle className="text-base font-bold">Root Cause Decline Breakdown</CardTitle>
+            <CardTitle className="text-base font-bold">Payment Failure Reasons</CardTitle>
             <CardDescription className="text-xs">
-              Diagnostic classification across all ingested payment failure events
+              Breakdown of why payments failed across all gateways
             </CardDescription>
           </div>
 
@@ -98,7 +98,7 @@ export const CompactDeclineCard: React.FC<CompactDeclineCardProps> = ({
             variant="secondary"
             className="border border-purple-500/30 bg-purple-50/80 font-mono text-[11px] font-semibold text-purple-700 dark:bg-purple-950/30 dark:text-purple-300"
           >
-            {total} total events
+            {total} total failures
           </Badge>
         </div>
       </CardHeader>

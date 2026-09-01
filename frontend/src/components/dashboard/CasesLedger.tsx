@@ -116,9 +116,9 @@ export const CasesLedger: React.FC<CasesLedgerProps> = ({
       <CardHeader className="border-b border-border/60 pb-3.5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <CardTitle className="text-base font-bold">Live Case Ledger</CardTitle>
+            <CardTitle className="text-base font-bold">Recovery Cases Feed</CardTitle>
             <CardDescription className="text-xs">
-              Real-time stream of dunning recovery state transitions and diagnostic bounds.
+              Live stream of payment recovery cases with automated retry schedules and AI insights.
             </CardDescription>
           </div>
           <Badge variant="secondary" className="border border-border/80 font-mono text-xs font-semibold">

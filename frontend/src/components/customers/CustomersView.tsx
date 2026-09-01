@@ -92,10 +92,10 @@ export const CustomersView: React.FC = () => {
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/70 pb-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            Customer 360° & Risk Intelligence Directory
+            Customer 360° Directory
           </h2>
           <p className="text-xs text-muted-foreground sm:text-sm">
-            Holistic account profiling, Lifetime Value (LTV) telemetry, and channel compliance preferences.
+            Track customer lifetime value, active dunning workflows, and communication preferences.
           </p>
         </div>
 

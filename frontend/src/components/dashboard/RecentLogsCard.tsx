@@ -300,11 +300,11 @@ export const RecentLogsCard: React.FC<RecentLogsCardProps> = ({ className }) => 
             <div className="flex items-center gap-2">
               <FileText className="size-4.5 text-foreground" />
               <CardTitle className="text-base font-bold tracking-tight text-foreground sm:text-lg">
-                Recent Operations & Outreach Logs
+                Outreach & Notification Logs
               </CardTitle>
             </div>
             <CardDescription className="text-xs text-muted-foreground">
-              Real-time audit ledger of emails, SMS, Slack handoffs, and PSP payment touchpoints.
+              Real-time audit log of dispatched emails, SMS messages, Slack alerts, and payment links.
             </CardDescription>
           </div>
 

@@ -42,7 +42,7 @@ export const CustomerDrawer: React.FC<CustomerDrawerProps> = ({
         </div>
         <CardTitle className="mt-4 text-base">No Customer Selected</CardTitle>
         <CardDescription className="mt-1 max-w-xs text-xs">
-          Click any account from the directory on the left to inspect CRM telemetry, cart drop-offs, and trigger interventions.
+          Select a customer from the directory to view account details, cart activity, and recovery options.
         </CardDescription>
       </Card>
     )
@@ -53,11 +53,11 @@ export const CustomerDrawer: React.FC<CustomerDrawerProps> = ({
       setActing(actionType)
       if (actionType === "cart_recovery") {
         await onTriggerCartRecovery(customer.customer_id)
-        toast.success(`Dispatched 1-Click Cart Recovery with 10% discount for ${customer.name}!`)
+        toast.success(`Sent 1-click cart recovery link (10% discount) to ${customer.name}!`)
       } else if (actionType === "upi_link") {
-        toast.success(`Generated secure Razorpay UPI Payment Link for ${customer.customer_id}`)
+        toast.success(`Generated payment link for ${customer.name}`)
       } else if (actionType === "pause_dunning") {
-        toast.success(`Dunning paused for ${customer.customer_id}. Granted 24h grace period.`)
+        toast.success(`Paused dunning for ${customer.name}. 24-hour grace period active.`)
       }
     } catch {
       toast.error(`Failed to execute ${actionType}`)
@@ -153,11 +153,11 @@ export const CustomerDrawer: React.FC<CustomerDrawerProps> = ({
 
         <Separator />
 
-        {/* 1-Click Customer Interventions */}
+        {/* Quick Recovery Actions */}
         <div>
           <div className="mb-2.5 flex items-center gap-1.5 font-mono text-xs font-semibold tracking-wider text-muted-foreground uppercase">
             <Zap className="size-3.5 text-primary" />
-            <span>1-Click Customer Interventions</span>
+            <span>Quick Recovery Actions</span>
           </div>
 
           <div className="flex flex-col gap-2">
@@ -169,7 +169,7 @@ export const CustomerDrawer: React.FC<CustomerDrawerProps> = ({
               className="justify-start text-xs"
             >
               {acting === "upi_link" ? <Spinner data-icon="inline-start" /> : <CreditCard data-icon="inline-start" className="size-3.5" />}
-              Send Razorpay UPI / Payment Link
+              Send Payment Link
             </Button>
 
             <Button
@@ -180,7 +180,7 @@ export const CustomerDrawer: React.FC<CustomerDrawerProps> = ({
               className="justify-start text-xs"
             >
               {acting === "cart_recovery" ? <Spinner data-icon="inline-start" /> : <ShoppingCart data-icon="inline-start" className="size-3.5" />}
-              Trigger 1-Click Cart Recovery Link
+              Send Cart Recovery Link (10% Discount)
             </Button>
 
             <Button
@@ -191,7 +191,7 @@ export const CustomerDrawer: React.FC<CustomerDrawerProps> = ({
               className="justify-start text-xs"
             >
               {acting === "pause_dunning" ? <Spinner data-icon="inline-start" /> : <PauseCircle data-icon="inline-start" className="size-3.5" />}
-              Pause Dunning (24h Grace Period)
+              Pause Recovery for 24 Hours
             </Button>
           </div>
         </div>

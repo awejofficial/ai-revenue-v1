@@ -63,10 +63,10 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           </div>
           <div>
             <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-              Recovery Funnel & Intelligence
+              Recovery Funnel & Analytics
             </h2>
             <p className="text-xs text-muted-foreground sm:text-sm">
-              End-to-end conversion analytics, multi-channel attribution, and processor telemetry.
+              Track recovery conversion rates, communication channels, and top payment failure causes.
             </p>
           </div>
         </div>
@@ -83,7 +83,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           ) : (
             <RefreshCw data-icon="inline-start" className="size-3.5" />
           )}
-          Refresh Telemetry
+          Refresh Analytics
         </Button>
       </div>
 

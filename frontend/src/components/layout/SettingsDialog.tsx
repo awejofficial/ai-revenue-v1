@@ -59,9 +59,9 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-base font-bold">System Settings & Appearance</DialogTitle>
+          <DialogTitle className="text-base font-bold">Settings & Appearance</DialogTitle>
           <DialogDescription className="text-xs">
-            Configure UI themes, view real-time gateway connections, and audit engine health.
+            Choose your theme and check connection status for payment gateways and AI models.
           </DialogDescription>
         </DialogHeader>
 

@@ -107,7 +107,7 @@ export const AuditDrawer: React.FC<AuditDrawerProps> = ({
         </div>
         <CardTitle className="mt-4 text-base font-bold">No Case Selected</CardTitle>
         <CardDescription className="mt-1 max-w-xs text-xs">
-          Click any case from the ledger on the left to inspect AI diagnostics, customer telemetry, and execution logs.
+          Select a case from the table to view AI reasoning, recovery history, and customer details.
         </CardDescription>
       </Card>
     )
@@ -130,26 +130,26 @@ export const AuditDrawer: React.FC<AuditDrawerProps> = ({
     {
       id: "node_detected",
       time: formatDate(selectedCase.created_at),
-      title: "Payment Degradation Detected",
-      description: `Failure event ingested into raw_events. Amount at risk: ${formatMoney(selectedCase.amount_usd)}.`,
+      title: "Payment Failure Detected",
+      description: `Payment failure received from gateway. Amount at risk: ${formatMoney(selectedCase.amount_usd)}.`,
       icon: ShieldAlert,
       iconStyle: "bg-foreground text-background",
     },
     {
       id: "node_diagnosis",
       time: formatDate(selectedCase.updated_at),
-      title: "Diagnosis & Policy Check",
+      title: "AI Diagnosis & Recovery Plan",
       description:
-        selectedCase.llm_reasoning || "Deterministic rule matched with customer context.",
+        selectedCase.llm_reasoning || "Recovery strategy selected based on customer segment and decline code.",
       icon: Search,
       iconStyle: "bg-foreground text-background",
     },
     {
       id: "node_outreach",
       time: formatDate(selectedCase.updated_at),
-      title: "Autonomous Outreach Dispatched",
+      title: "Recovery Outreach Sent",
       description:
-        selectedCase.last_action || `Payment update dispatched for ${selectedCase.customer_id}`,
+        selectedCase.last_action || `Payment update message dispatched to ${selectedCase.customer_id}.`,
       icon: Send,
       iconStyle: "bg-foreground text-background",
     },
