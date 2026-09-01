@@ -1,6 +1,30 @@
 {
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "https://ai-revenue-backend-t1nh.onrender.com/api/:path*"
+    },
+    {
+      "source": "/health",
+      "destination": "https://ai-revenue-backend-t1nh.onrender.com/health"
+    },
+    {
+      "source": "/dashboard/stats",
+      "destination": "https://ai-revenue-backend-t1nh.onrender.com/dashboard/stats"
+    },
+    {
+      "source": "/dashboard/cases",
+      "destination": "https://ai-revenue-backend-t1nh.onrender.com/dashboard/cases"
+    },
+    {
+      "source": "/admin/:path*",
+      "destination": "https://ai-revenue-backend-t1nh.onrender.com/admin/:path*"
+    },
+    {
+      "source": "/webhooks/:path*",
+      "destination": "https://ai-revenue-backend-t1nh.onrender.com/webhooks/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

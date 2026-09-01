@@ -1,19 +1,20 @@
 // frontend/src/App.tsx
 
 import React, { useState, useEffect, Component, type ErrorInfo } from "react"
-import { Header } from "@/components/layout/Header"
+import { Header, type NavTab } from "@/components/layout/Header"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { MobileNav } from "@/components/layout/MobileNav"
 import { DashboardView } from "@/components/dashboard/DashboardView"
 import { CustomersView } from "@/components/customers/CustomersView"
 import { AnalyticsView } from "@/components/analytics/AnalyticsView"
+import { ApiDocsView } from "@/components/docs/ApiDocsView"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { AlertCircle, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-type ViewTab = "dashboard" | "customers" | "analytics"
+type ViewTab = NavTab
 
 interface ErrorBoundaryProps {
   children: React.ReactNode
@@ -70,6 +71,7 @@ export function App() {
     const path = window.location.pathname.toLowerCase()
     if (path.includes("customer")) return "customers"
     if (path.includes("analytic")) return "analytics"
+    if (path.includes("doc")) return "docs"
     return "dashboard"
   })
 
@@ -92,6 +94,7 @@ export function App() {
       const path = window.location.pathname.toLowerCase()
       if (path.includes("customer")) setCurrentTab("customers")
       else if (path.includes("analytic")) setCurrentTab("analytics")
+      else if (path.includes("doc")) setCurrentTab("docs")
       else setCurrentTab("dashboard")
     }
 
@@ -126,6 +129,7 @@ export function App() {
                     onNavigateToDashboardWithFilter={handleNavigateWithFilter}
                   />
                 )}
+                {currentTab === "docs" && <ApiDocsView />}
               </main>
             </div>
 

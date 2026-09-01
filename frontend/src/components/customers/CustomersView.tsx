@@ -50,6 +50,20 @@ export const CustomersView: React.FC = () => {
     await loadData(true)
   }
 
+  const handleSeedDirectory = async () => {
+    try {
+      setRefreshing(true)
+      await api.seedDatabase()
+      toast.success("Demo customer accounts & cases seeded successfully!")
+      await loadData(true)
+    } catch (err) {
+      console.error("Failed to seed:", err)
+      toast.error("Failed to seed demo accounts")
+    } finally {
+      setRefreshing(false)
+    }
+  }
+
   // Filter customers by search and segment
   const filteredCustomers = customers.filter((c) => {
     const q = search.toLowerCase()
@@ -85,16 +99,31 @@ export const CustomersView: React.FC = () => {
           </p>
         </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={refreshing}
-          onClick={() => loadData(false)}
-          className="h-8 text-xs"
-        >
-          {refreshing ? <Spinner data-icon="inline-start" /> : <RefreshCw data-icon="inline-start" className="size-3.5" />}
-          Refresh Directory
-        </Button>
+        <div className="flex items-center gap-2">
+          {customers.length === 0 && !loading && (
+            <Button
+              variant="default"
+              size="sm"
+              disabled={refreshing}
+              onClick={handleSeedDirectory}
+              className="h-8 text-xs bg-primary text-primary-foreground shadow-xs hover:bg-primary/90"
+            >
+              {refreshing ? <Spinner data-icon="inline-start" /> : <Users data-icon="inline-start" className="size-3.5" />}
+              Seed Demo Directory
+            </Button>
+          )}
+
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={refreshing}
+            onClick={() => loadData(false)}
+            className="h-8 text-xs"
+          >
+            {refreshing ? <Spinner data-icon="inline-start" /> : <RefreshCw data-icon="inline-start" className="size-3.5" />}
+            Refresh Directory
+          </Button>
+        </div>
       </div>
 
       {/* KPI Metric Strip */}

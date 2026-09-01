@@ -38,6 +38,18 @@ async def lifespan(app: FastAPI):
     # Startup
     await init_db()
     
+    # Auto-seed database if customer directory is empty
+    try:
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            cust_count = await conn.fetchval("SELECT COUNT(*) FROM customers")
+            if not cust_count or cust_count == 0:
+                print("[Lifespan] No customers detected in database. Auto-seeding initial profiles & demo cases...")
+                from app.seed_data import seed
+                await seed()
+    except Exception as e:
+        print(f"[Lifespan] Auto-seed check notice: {e}")
+
     # Process any initial pending items
     asyncio.create_task(process_pending_events())
     
@@ -505,6 +517,18 @@ async def dashboard_stats():
         return dict(stats)
 
 
+@app.post("/admin/seed")
+@app.get("/api/seed")
+async def seed_database():
+    """Seeds the customer directory and sample demo cases if empty or manually requested."""
+    try:
+        from app.seed_data import seed
+        await seed()
+        return {"status": "success", "message": "Customer directory and demo cases seeded successfully."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/api/customers")
 @app.get("/api/customers/")
 async def api_customers():
@@ -512,6 +536,13 @@ async def api_customers():
     pool = await get_pool()
     async with pool.acquire() as conn:
         customers_raw = await conn.fetch("SELECT * FROM customers ORDER BY customer_id ASC")
+        if not customers_raw:
+            try:
+                from app.seed_data import seed
+                await seed()
+                customers_raw = await conn.fetch("SELECT * FROM customers ORDER BY customer_id ASC")
+            except Exception as e:
+                print(f"[api_customers] Auto-seed notice: {e}")
         cases_raw = await conn.fetch("SELECT customer_id, status, amount_usd, created_at FROM cases")
         
         # Aggregate cases by customer

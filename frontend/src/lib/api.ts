@@ -35,9 +35,25 @@ export class ApiError extends Error {
 
 /**
  * Base API URL. In development, Vite proxies requests to http://127.0.0.1:8000.
- * In custom deployment, can be configured via VITE_API_BASE_URL.
+ * In production, uses VITE_API_BASE_URL or automatically falls back to the live Render backend.
  */
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "")
+function getApiBaseUrl(): string {
+  const envUrl = import.meta.env.VITE_API_BASE_URL
+  if (envUrl && typeof envUrl === "string" && envUrl.trim().length > 0) {
+    return envUrl.replace(/\/$/, "")
+  }
+  // Automatic production fallback: If hosted on Vercel or cloud domain, route to deployed Render backend
+  if (
+    typeof window !== "undefined" &&
+    (window.location.hostname.includes("vercel.app") ||
+      (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1"))
+  ) {
+    return "https://ai-revenue-backend-t1nh.onrender.com"
+  }
+  return ""
+}
+
+export const API_BASE_URL = getApiBaseUrl()
 
 /**
  * Generic request helper with robust error handling
@@ -80,6 +96,16 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     // Handle 204 No Content
     if (response.status === 204) {
       return {} as T
+    }
+
+    // Safety guard: If server sent HTML (e.g. index.html SPA rewrite), throw explicit error
+    const contentType = response.headers.get("content-type") || ""
+    if (contentType.includes("text/html")) {
+      throw new ApiError(
+        response.status,
+        "HtmlResponseError",
+        `Expected JSON response from ${path}, but received an HTML document. The backend API endpoint may be unreachable or routing improperly.`
+      )
     }
 
     return (await response.json()) as T
@@ -250,6 +276,15 @@ export async function ingestBillingWebhook(
 }
 
 /**
+ * Seed database with sample customer directory and demo scenarios: POST /admin/seed
+ */
+export async function seedDatabase(): Promise<{ status: string; message: string }> {
+  return request<{ status: string; message: string }>("/admin/seed", {
+    method: "POST",
+  })
+}
+
+/**
  * Default grouped export for ergonomic consumption
  */
 export const api = {
@@ -268,4 +303,5 @@ export const api = {
   simulateRecovery,
   ingestPSPWebhook,
   ingestBillingWebhook,
+  seedDatabase,
 }

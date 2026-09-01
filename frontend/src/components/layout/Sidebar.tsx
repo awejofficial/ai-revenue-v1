@@ -5,6 +5,7 @@ import {
   LayoutGrid,
   Users,
   Filter,
+  FileCode2,
   BarChart3,
   Mail,
   Settings,
@@ -17,9 +18,11 @@ import { SettingsDialog } from "@/components/layout/SettingsDialog"
 import { useTheme } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
 
+export type NavTab = "dashboard" | "customers" | "analytics" | "docs"
+
 interface SidebarProps {
-  currentTab: "dashboard" | "customers" | "analytics"
-  onTabChange: (tab: "dashboard" | "customers" | "analytics") => void
+  currentTab: NavTab
+  onTabChange: (tab: NavTab) => void
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onTabChange }) => {
@@ -41,6 +44,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onTabChange }) => 
       id: "analytics" as const,
       label: "Recovery Funnel",
       icon: Filter,
+    },
+    {
+      id: "docs" as const,
+      label: "API Reference",
+      icon: FileCode2,
     },
   ]
 
@@ -147,14 +155,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onTabChange }) => 
           {/* Documentation Link */}
           <Tooltip>
             <TooltipTrigger
-              onClick={() => window.open("/docs", "_blank")}
-              className="flex size-10 items-center justify-center rounded-xl text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
+              onClick={() => onTabChange("docs")}
+              className={cn(
+                "flex size-10 items-center justify-center rounded-xl transition-colors hover:bg-muted hover:text-foreground",
+                currentTab === "docs"
+                  ? "bg-purple-500/10 text-purple-700 shadow-xs ring-1 ring-purple-500/20 dark:bg-purple-500/20 dark:text-purple-300"
+                  : "text-muted-foreground/70"
+              )}
             >
               <HelpCircle className="size-5" />
               <span className="sr-only">Documentation & Help</span>
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={12}>
-              API Docs & Recovery Guide
+              API Docs & Recovery Reference
             </TooltipContent>
           </Tooltip>
         </div>

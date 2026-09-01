@@ -1,12 +1,14 @@
 // frontend/src/components/layout/MobileNav.tsx
 
 import React from "react"
-import { LayoutGrid, Users, TrendingUp } from "lucide-react"
+import { LayoutGrid, Users, TrendingUp, FileCode2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
+export type NavTab = "dashboard" | "customers" | "analytics" | "docs"
+
 interface MobileNavProps {
-  currentTab: "dashboard" | "customers" | "analytics"
-  onTabChange: (tab: "dashboard" | "customers" | "analytics") => void
+  currentTab: NavTab
+  onTabChange: (tab: NavTab) => void
 }
 
 export const MobileNav: React.FC<MobileNavProps> = ({ currentTab, onTabChange }) => {
@@ -26,12 +28,17 @@ export const MobileNav: React.FC<MobileNavProps> = ({ currentTab, onTabChange })
       label: "Funnel",
       icon: TrendingUp,
     },
+    {
+      id: "docs" as const,
+      label: "API Docs",
+      icon: FileCode2,
+    },
   ]
 
   return (
     <nav
       aria-label="Mobile Navigation"
-      className="fixed inset-x-0 bottom-0 z-40 flex h-16 items-center justify-around border-t border-border/80 bg-background/95 px-3 backdrop-blur-md md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 flex h-16 items-center justify-around border-t border-border/80 bg-background/95 px-2 backdrop-blur-md md:hidden"
     >
       {items.map((item) => {
         const Icon = item.icon
@@ -43,7 +50,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ currentTab, onTabChange })
             type="button"
             onClick={() => onTabChange(item.id)}
             className={cn(
-              "flex min-w-[72px] flex-col items-center justify-center gap-1 rounded-xl py-1.5 transition-all",
+              "flex min-w-[64px] flex-col items-center justify-center gap-1 rounded-xl py-1.5 transition-all",
               isActive
                 ? "font-semibold text-primary"
                 : "text-muted-foreground hover:text-foreground active:scale-95"
