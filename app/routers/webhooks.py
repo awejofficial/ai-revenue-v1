@@ -11,6 +11,7 @@ router = APIRouter(prefix="/webhooks", tags=["Webhooks"])
 
 
 @router.post("/psp")
+@router.post("/razorpay")
 async def psp_webhook(request: Request):
     """
     Ingests payment gateway webhooks for Stripe & Razorpay.

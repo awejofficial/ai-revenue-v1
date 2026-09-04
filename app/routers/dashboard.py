@@ -29,17 +29,24 @@ async def dashboard_stats():
 
 @router.get("/dashboard/cases")
 @router.get("/dashboard/cases/")
-async def dashboard_cases(limit: int = 30):
-    """Returns the latest cases list."""
+async def dashboard_cases(limit: int = 50):
+    """Returns the latest cases list with explicit payment IDs and AI diagnostics."""
     pool = await get_pool()
     async with pool.acquire() as conn:
         cases = await conn.fetch("""
             SELECT 
                 case_id,
+                event_id,
+                COALESCE(event_id, 'pay_' || SUBSTR(MD5(case_id::text), 1, 10)) AS payment_id,
                 customer_id,
                 case_type,
                 status,
                 amount_usd,
+                currency,
+                root_cause,
+                recovery_action,
+                payment_link_id,
+                recovery_message,
                 current_retry_count,
                 max_retries,
                 last_action,

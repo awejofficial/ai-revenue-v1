@@ -31,6 +31,8 @@ from app.routers import (
     customers,
     analytics,
     admin,
+    agent,
+    payments,
     legacy,
 )
 
@@ -98,6 +100,8 @@ if os.path.exists(dist_assets_dir):
 
 # Include Modular Routers
 app.include_router(health.router)
+app.include_router(payments.router)
+app.include_router(agent.router)
 app.include_router(webhooks.router)
 app.include_router(dashboard.router)
 app.include_router(customers.router)

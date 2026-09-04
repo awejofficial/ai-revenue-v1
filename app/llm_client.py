@@ -28,64 +28,99 @@ else:
     print("[LLM] WARNING: GEMINI_API_KEY not set. Operating in intelligent rules-fallback mode.")
 
 
+VALID_CAUSES = [
+    "BANK_DECLINE",
+    "NETWORK_TIMEOUT",
+    "INSUFFICIENT_FUNDS",
+    "CARD_EXPIRED",
+    "FRAUD_FLAG",
+    "CHECKOUT_ABANDONED",
+    "SUBSCRIPTION_FAILED",
+    "OVERDUE_INVOICE",
+    "UNKNOWN",
+]
+
 async def llm_diagnose(
     error_code: str | None, 
     error_message: str | None, 
     amount: float, 
-    currency: str = "USD",
+    currency: str = "INR",
     event_type: str = "payment_failed",
     context: dict = None
 ) -> dict:
     """
-    Calls Google Gemini to diagnose ambiguous or rare payment failure codes,
-    incorporating customer LTV, tenure, historical churn risk, and billing cycles.
+    Calls Google Gemini to diagnose payment failures, classify root cause across
+    8 Indian BFSI categories, and craft personalized Hinglish/English recovery copy.
     """
     ctx = context or {}
+    code_str = str(error_code or "").lower()
     
+    # Fast heuristic root cause determination if LLM is unavailable
+    fallback_cause = "UNKNOWN"
+    if "timeout" in code_str or "gateway" in code_str:
+        fallback_cause = "NETWORK_TIMEOUT"
+    elif "insufficient" in code_str or "balance" in code_str:
+        fallback_cause = "INSUFFICIENT_FUNDS"
+    elif "expired" in code_str:
+        fallback_cause = "CARD_EXPIRED"
+    elif "fraud" in code_str or "suspicious" in code_str:
+        fallback_cause = "FRAUD_FLAG"
+    elif "abandon" in code_str or "drop" in code_str or event_type == "checkout_drop_off":
+        fallback_cause = "CHECKOUT_ABANDONED"
+    elif "mandate" in code_str or "subscri" in code_str:
+        fallback_cause = "SUBSCRIPTION_FAILED"
+    elif "invoice" in code_str or "overdue" in code_str:
+        fallback_cause = "OVERDUE_INVOICE"
+    elif "decline" in code_str or "do_not_honor" in code_str:
+        fallback_cause = "BANK_DECLINE"
+
     if not model or not GEMINI_API_KEY:
+        is_fraud = fallback_cause == "FRAUD_FLAG"
+        action = "human_handoff" if is_fraud else ("retry_payment" if ctx.get("is_first_failure") else "send_email")
         return {
-            "action": "retry_payment" if ctx.get("is_first_failure") else "send_email",
-            "delay_hours": 24,
-            "reasoning": f"Rules Fallback (No LLM key): First failure={ctx.get('is_first_failure', True)}, Segment={ctx.get('segment', 'standard')}. Scheduled 24h recovery."
+            "root_cause": fallback_cause,
+            "confidence": 0.85,
+            "action": action,
+            "delay_hours": 0 if is_fraud else 24,
+            "reasoning": f"Rules Heuristic: Root cause classified as {fallback_cause}. Action bounded by compliance policy.",
+            "customer_message": "Namaste! Aapka payment process nahi ho paya. Kripya is secure link se transaction complete karein."
         }
 
     prompt = f"""
-You are an expert Autonomous AI Revenue Recovery & Intelligent Dunning Agent for SaaS & E-Commerce companies.
+You are an expert Autonomous AI Revenue Recovery Agent for the Razorpay AI Buildathon (Track 03).
 
---- CUSTOMER PROFILE & CONTEXT ---
+Classify this payment failure into exactly ONE root cause from this list:
+{VALID_CAUSES}
+
+--- TRANSACTION & CUSTOMER CONTEXT ---
+- Amount: {currency} {amount:,.2f}
+- Error Code: {error_code or 'UNKNOWN'}
+- Error Description: {error_message or 'No gateway explanation provided'}
 - Customer ID: {ctx.get('customer_id', 'unknown')}
-- Segment: {ctx.get('segment', 'standard')} (Options: high_ltv, standard, trial, enterprise)
-- Customer Lifetime Value (LTV): ${ctx.get('ltv', 0)}
-- Subscription Plan: {ctx.get('plan', 'monthly')}
-- Total Prior Attempts (Last 90d): {ctx.get('total_attempts', 0)}
-- Past Failures: {ctx.get('failed_attempts', 0)}
-- Is First Failure: {"Yes" if ctx.get('is_first_failure') else "No"}
-- Is Repeat Offender: {"Yes" if ctx.get('is_repeat_offender') else "No"}
+- Segment: {ctx.get('segment', 'standard')} (high_ltv, standard, trial, enterprise)
+- Customer LTV: ₹{ctx.get('ltv', 0):,.2f}
+- Plan: {ctx.get('plan', 'monthly')}
+- Total Attempts: {ctx.get('total_attempts', 0)}
+- Prior Failures: {ctx.get('failed_attempts', 0)}
 
---- PAYMENT FAILURE DETAILS ---
-- Event Type: {event_type}
-- Amount: {currency} {amount:.2f}
-- Error Code: {error_code or 'UNKNOWN_DECLINE'}
-- Error Message: {error_message or 'No gateway explanation provided'}
+--- COMPLIANCE & RECOVERY POLICY RULES ---
+1. "FRAUD_FLAG": Strict Zero-Auto-Retry policy. Always action="human_handoff", delay_hours=0.
+2. "NETWORK_TIMEOUT": Immediate retry or alternate rail (action="retry_payment", delay_hours=0).
+3. "BANK_DECLINE": Delayed retry with 2-hour backoff window (action="retry_payment", delay_hours=2).
+4. "INSUFFICIENT_FUNDS": Payment link via SMS/Email (action="send_email" or "send_sms", delay_hours=24).
+5. "CARD_EXPIRED": Request payment method update (action="send_email", delay_hours=24).
+6. "CHECKOUT_ABANDONED": 1-click cart hold recovery link (action="send_checkout_recovery", delay_hours=1).
+7. "SUBSCRIPTION_FAILED": Mandate swap link (action="send_email", delay_hours=24).
+8. "OVERDUE_INVOICE": B2B progressive dunning with 7-day grace period (action="send_email", delay_hours=168).
 
---- AVAILABLE ACTIONS ---
-1. "retry_payment" -> Automatic gateway retry after delay (specify delay_hours, e.g. 24, 48, 72).
-2. "send_email" -> Send customer personalized recovery email with payment update link.
-3. "send_sms" -> Send quick SMS alert with secure payment link.
-4. "human_handoff" -> Escalate to human operations/account team via Slack.
-
---- DECISION GUIDELINES ---
-- High-LTV ($5000+): Prioritize white-glove retention. Never aggressively spam. Align retries with salary/paydays (72h) or priority outreach.
-- Repeat Insufficient Funds (2+ times): Avoid blind retries. Ask customer to switch billing date or choose UPI/alternate card.
-- Hard Declines (stolen card, closed account, suspected fraud): Instant "human_handoff" (0 delay).
-- Soft Technical Declines (network timeout, bank server down): Short retry (2-6 hours).
-- Free Trial: 1 single gentle retry, no aggressive dunning.
-
-Respond ONLY with a valid JSON object in the following format:
+Respond ONLY with a valid JSON object:
 {{
-  "action": "retry_payment" | "send_email" | "send_sms" | "human_handoff",
-  "delay_hours": <integer_hours>,
-  "reasoning": "<clear concise explanation citing customer context and failure reason>"
+  "root_cause": "<ONE_OF_THE_8_CAUSES>",
+  "confidence": <0.0-1.0>,
+  "action": "retry_payment" | "send_email" | "send_sms" | "human_handoff" | "send_checkout_recovery",
+  "delay_hours": <integer>,
+  "reasoning": "<concise explanation of technical root cause and policy bound>",
+  "customer_message": "<polite, high-converting 1-2 sentence recovery copy tailored for an Indian customer in natural conversational Hinglish or professional English>"
 }}
 """
 
@@ -101,8 +136,6 @@ Respond ONLY with a valid JSON object in the following format:
             return response.text
 
         raw_text = await asyncio.to_thread(_call_gemini)
-        
-        # Clean any markdown code fences if returned
         cleaned = raw_text.strip()
         if cleaned.startswith("```json"):
             cleaned = cleaned[7:]
@@ -113,22 +146,66 @@ Respond ONLY with a valid JSON object in the following format:
         
         parsed = json.loads(cleaned.strip())
         
+        root_cause = parsed.get("root_cause", fallback_cause)
+        if root_cause not in VALID_CAUSES:
+            root_cause = fallback_cause
+            
         action = parsed.get("action", "retry_payment")
-        if action not in ["retry_payment", "send_email", "send_sms", "human_handoff"]:
-            action = "retry_payment"
+        if root_cause == "FRAUD_FLAG":
+            action = "human_handoff"
+            parsed["delay_hours"] = 0
             
         return {
+            "root_cause": root_cause,
+            "confidence": float(parsed.get("confidence", 0.9)),
             "action": action,
             "delay_hours": int(parsed.get("delay_hours", 24)),
-            "reasoning": parsed.get("reasoning", "Gemini evaluated customer profile and error diagnostics.")
+            "reasoning": parsed.get("reasoning", f"Root cause: {root_cause}."),
+            "customer_message": parsed.get("customer_message", "Namaste! Please complete your transaction using this secure link.")
         }
         
     except Exception as e:
-        print(f"[LLM] Gemini generation failed: {e}")
-        # Safe fallback
-        fallback_action = "human_handoff" if "fraud" in str(error_code).lower() else "retry_payment"
+        print(f"[LLM] Gemini generation error: {e}")
+        is_fraud = fallback_cause == "FRAUD_FLAG"
+        action = "human_handoff" if is_fraud else "retry_payment"
         return {
-            "action": fallback_action,
-            "delay_hours": 24 if fallback_action == "retry_payment" else 0,
-            "reasoning": f"LLM Fallback due to API error ({str(e)}). Defaulted to {fallback_action}."
+            "root_cause": fallback_cause,
+            "confidence": 0.7,
+            "action": action,
+            "delay_hours": 0 if is_fraud else 24,
+            "reasoning": f"Heuristic classification due to LLM timeout ({e}).",
+            "customer_message": "Namaste! Please complete your pending transaction using this secure link."
         }
+
+
+def get_heuristic_classification(error_code: str | None, error_message: str | None, event_type: str = "payment_failed") -> dict:
+    code_str = (str(error_code or "") + " " + str(error_message or "")).lower()
+    fallback_cause = "UNKNOWN"
+    if "timeout" in code_str or "gateway" in code_str or "network" in code_str:
+        fallback_cause = "NETWORK_TIMEOUT"
+    elif "insufficient" in code_str or "balance" in code_str:
+        fallback_cause = "INSUFFICIENT_FUNDS"
+    elif "expired" in code_str:
+        fallback_cause = "CARD_EXPIRED"
+    elif "fraud" in code_str or "suspicious" in code_str or "risk" in code_str:
+        fallback_cause = "FRAUD_FLAG"
+    elif "abandon" in code_str or "drop" in code_str or event_type == "checkout_drop_off":
+        fallback_cause = "CHECKOUT_ABANDONED"
+    elif "mandate" in code_str or "subscri" in code_str or "renewal" in code_str:
+        fallback_cause = "SUBSCRIPTION_FAILED"
+    elif "invoice" in code_str or "overdue" in code_str:
+        fallback_cause = "OVERDUE_INVOICE"
+    elif "decline" in code_str or "do_not_honor" in code_str or "bad_request" in code_str:
+        fallback_cause = "BANK_DECLINE"
+
+    is_fraud = fallback_cause == "FRAUD_FLAG"
+    action = "human_handoff" if is_fraud else "retry_payment"
+    return {
+        "root_cause": fallback_cause,
+        "confidence": 0.85,
+        "action": action,
+        "delay_hours": 0 if is_fraud else 24,
+        "reasoning": f"Heuristic: {fallback_cause}",
+        "recovery_message": "Namaste! Please complete your pending payment using this secure link.",
+    }
+

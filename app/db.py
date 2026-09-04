@@ -38,7 +38,12 @@ CREATE TABLE IF NOT EXISTS cases (
     customer_id TEXT NOT NULL,
     case_type TEXT NOT NULL,
     amount_usd NUMERIC DEFAULT 0,
+    currency TEXT DEFAULT 'INR',
     status TEXT DEFAULT 'new',
+    root_cause TEXT,
+    recovery_action TEXT,
+    payment_link_id TEXT,
+    recovery_message TEXT,
     max_retries INT DEFAULT 3,
     current_retry_count INT DEFAULT 0,
     last_action TEXT,
@@ -61,6 +66,22 @@ CREATE TABLE IF NOT EXISTS action_logs (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS batch_runs (
+    id SERIAL PRIMARY KEY,
+    run_id TEXT UNIQUE NOT NULL,
+    total INT DEFAULT 0,
+    recovered INT DEFAULT 0,
+    escalated INT DEFAULT 0,
+    failed INT DEFAULT 0,
+    skipped INT DEFAULT 0,
+    money_recovered NUMERIC DEFAULT 0,
+    recovery_rate NUMERIC DEFAULT 0,
+    stopped_early BOOLEAN DEFAULT FALSE,
+    stopped_at_index INT,
+    started_at TIMESTAMP DEFAULT NOW(),
+    completed_at TIMESTAMP
+);
+
 CREATE INDEX IF NOT EXISTS idx_raw_events_unprocessed 
 ON raw_events (is_processed, ingested_at);
 
@@ -69,6 +90,9 @@ ON cases (customer_id);
 
 CREATE INDEX IF NOT EXISTS idx_cases_status 
 ON cases (status);
+
+CREATE INDEX IF NOT EXISTS idx_batch_runs_run_id
+ON batch_runs (run_id);
 """
 
 class SQLiteRow(dict):
@@ -174,6 +198,19 @@ async def ensure_schema(db_pool):
             await conn.execute("ALTER TABLE customers ADD COLUMN contact_preferences TEXT")
         except Exception:
             pass  # Already exists or dialect handles it
+
+        # Migration: Ensure Track 03 fields exist on cases table
+        for col_def in [
+            "currency TEXT DEFAULT 'INR'",
+            "root_cause TEXT",
+            "recovery_action TEXT",
+            "payment_link_id TEXT",
+            "recovery_message TEXT"
+        ]:
+            try:
+                await conn.execute(f"ALTER TABLE cases ADD COLUMN {col_def}")
+            except Exception:
+                pass
 
 
 async def init_db():

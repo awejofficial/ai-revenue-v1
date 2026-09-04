@@ -42,10 +42,17 @@ export type CaseStatus =
  */
 export interface Case {
   case_id: number
+  event_id?: string
+  payment_id?: string
   customer_id: string
   case_type: string
   status: CaseStatus
   amount_usd: number
+  currency?: string
+  root_cause?: string | null
+  recovery_action?: string | null
+  payment_link_id?: string | null
+  recovery_message?: string | null
   current_retry_count: number
   max_retries: number
   last_action: string | null
@@ -53,6 +60,26 @@ export interface Case {
   llm_reasoning: string | null
   created_at: string
   updated_at: string
+}
+
+/**
+ * Payment Transaction Record (Image 3)
+ */
+export interface PaymentTransaction {
+  id: string
+  payment_id: string
+  case_id: number
+  customer_email: string
+  amount: number
+  currency: string
+  status: string
+  root_cause: string
+  recovery_action: string
+  gemini_reasoning: string
+  recovery_message: string
+  payment_link_id?: string | null
+  retry_count: number
+  created_at: string | null
 }
 
 /**
@@ -237,3 +264,106 @@ export interface SimulateScenarioResponse {
 export interface ManualProcessResponse {
   status: "processing_completed" | string
 }
+
+/**
+ * Razorpay Live Detector Models
+ */
+export interface FailedPayment {
+  id: string
+  amount: number
+  currency: string
+  status: string
+  error_code: string
+  error_description: string
+  email: string
+  contact: string
+  method: string
+  created_at: string
+}
+
+export interface AtRiskPayment {
+  id: string
+  amount: number
+  currency: string
+  status: string
+  risk: string
+  method: string
+  created_at: string
+}
+
+export interface DetectorData {
+  source: string
+  polled_at: string
+  hours_back: number
+  total_fetched: number
+  failed_count: number
+  authorized_not_captured: number
+  captured_count: number
+  failed_payments: FailedPayment[]
+  at_risk_payments: AtRiskPayment[]
+  error?: string
+  note?: string
+}
+
+/**
+ * Honest Exception List Models
+ */
+export interface ExceptionPayment {
+  id: string
+  case_id: number
+  amount: number
+  currency: string
+  status: string
+  recovery_action: string
+  gemini_reasoning: string
+  recovery_message: string
+  payment_link_id?: string | null
+  retry_count: number
+  customer_email: string
+  created_at: string
+}
+
+export interface ExceptionGroup {
+  root_cause: string
+  count: number
+  total_value: number
+  payments: ExceptionPayment[]
+}
+
+export interface ExceptionsResponse {
+  total_exceptions: number
+  total_value_at_risk: number
+  by_cause: ExceptionGroup[]
+}
+
+/**
+ * Batch Run Record
+ */
+export interface BatchRun {
+  run_id: string
+  total: number
+  recovered: number
+  escalated: number
+  failed: number
+  skipped: number
+  money_recovered: number
+  recovery_rate: number
+  stopped_early: boolean
+  stopped_at_index: number | null
+  started_at: string
+  completed_at: string | null
+}
+
+export interface BatchRunResponse {
+  run_id: string
+  total: number
+  recovered: number
+  escalated: number
+  failed: number
+  skipped: number
+  money_recovered: number
+  recovery_rate: number
+  stopped_early: boolean
+  stopped_at_index: number | null
+}
+

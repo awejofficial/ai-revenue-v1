@@ -1,24 +1,24 @@
-// frontend/src/components/layout/Sidebar.tsx
-
 import React, { useState } from "react"
 import {
   LayoutGrid,
-  Users,
-  Filter,
-  FileCode2,
+  CreditCard,
   BarChart3,
   Mail,
   Settings,
   HelpCircle,
   Sun,
   Moon,
+  Radar,
+  ShieldAlert,
+  Home,
 } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { SettingsDialog } from "@/components/layout/SettingsDialog"
 import { useTheme } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
+import type { NavTab } from "@/components/layout/Header"
 
-export type NavTab = "dashboard" | "customers" | "analytics" | "docs"
+export type { NavTab }
 
 interface SidebarProps {
   currentTab: NavTab
@@ -31,24 +31,29 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onTabChange }) => 
 
   const navItems = [
     {
+      id: "landing" as const,
+      label: "Home",
+      icon: Home,
+    },
+    {
       id: "dashboard" as const,
-      label: "Operations Hub",
+      label: "Overview",
       icon: LayoutGrid,
     },
     {
-      id: "customers" as const,
-      label: "Customer 360°",
-      icon: Users,
+      id: "payments" as const,
+      label: "Payments",
+      icon: CreditCard,
     },
     {
-      id: "analytics" as const,
-      label: "Recovery Funnel",
-      icon: Filter,
+      id: "exceptions" as const,
+      label: "Exceptions",
+      icon: ShieldAlert,
     },
     {
-      id: "docs" as const,
-      label: "API Reference",
-      icon: FileCode2,
+      id: "detector" as const,
+      label: "Live Detect",
+      icon: Radar,
     },
   ]
 
@@ -61,7 +66,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onTabChange }) => 
     {
       label: "Notification Logs",
       icon: Mail,
-      action: () => onTabChange("dashboard"),
+      action: () => onTabChange("exceptions"),
     },
     {
       label: "System Settings",
@@ -94,9 +99,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onTabChange }) => 
                   <TooltipTrigger
                     onClick={() => onTabChange(item.id)}
                     className={cn(
-                      "flex size-11 items-center justify-center rounded-xl transition-all",
+                      "flex size-11 items-center justify-center rounded-xl transition-all cursor-pointer",
                       isActive
-                        ? "bg-purple-500/10 text-purple-700 shadow-xs ring-1 ring-purple-500/20 dark:bg-purple-500/20 dark:text-purple-300"
+                        ? "bg-primary/10 text-primary shadow-xs ring-1 ring-primary/25 dark:bg-primary/20 dark:text-primary"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     )}
                   >
@@ -155,19 +160,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onTabChange }) => 
           {/* Documentation Link */}
           <Tooltip>
             <TooltipTrigger
-              onClick={() => onTabChange("docs")}
-              className={cn(
-                "flex size-10 items-center justify-center rounded-xl transition-colors hover:bg-muted hover:text-foreground",
-                currentTab === "docs"
-                  ? "bg-purple-500/10 text-purple-700 shadow-xs ring-1 ring-purple-500/20 dark:bg-purple-500/20 dark:text-purple-300"
-                  : "text-muted-foreground/70"
-              )}
+              onClick={() => window.open("http://127.0.0.1:8000/docs", "_blank")}
+              className="flex size-10 items-center justify-center rounded-xl text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground cursor-pointer"
             >
               <HelpCircle className="size-5" />
               <span className="sr-only">Documentation & Help</span>
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={12}>
-              API Docs & Recovery Reference
+              FastAPI Swagger Docs & Telemetry
             </TooltipContent>
           </Tooltip>
         </div>

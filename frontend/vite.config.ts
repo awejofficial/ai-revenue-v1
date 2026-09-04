@@ -14,10 +14,26 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": "http://127.0.0.1:8000",
-      "/dashboard": "http://127.0.0.1:8000",
+      "/dashboard": {
+        target: "http://127.0.0.1:8000",
+        bypass: (req) => {
+          if (req.headers.accept?.includes("text/html")) {
+            return "/index.html"
+          }
+        },
+      },
       "/admin": "http://127.0.0.1:8000",
       "/webhooks": "http://127.0.0.1:8000",
       "/health": "http://127.0.0.1:8000",
+      "/payments": {
+        target: "http://127.0.0.1:8000",
+        bypass: (req) => {
+          if (req.headers.accept?.includes("text/html")) {
+            return "/index.html"
+          }
+        },
+      },
+      "/agent": "http://127.0.0.1:8000",
     },
   },
 })

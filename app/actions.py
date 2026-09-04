@@ -430,3 +430,91 @@ async def get_customer_contact(customer_id: str) -> dict:
         "crm_data": {}, 
         "contact_preferences": {"email": True, "sms": True}
     }
+
+
+# ============================================================
+# ACTIVE LINK SETTLEMENT SYNC (Loop Closure)
+# ============================================================
+async def sync_payment_links() -> dict:
+    """
+    Polls Razorpay test API to check settlement status of all pending recovery links.
+    When a customer pays (status == 'paid'), transitions the case to 'resolved'.
+    Closes the recovery loop with verified monetary proof!
+    """
+    from app.db import get_pool
+    pool = await get_pool()
+    
+    async with pool.acquire() as conn:
+        pending_cases = await conn.fetch("""
+            SELECT case_id, customer_id, amount_usd, currency, payment_link_id, status
+            FROM cases
+            WHERE payment_link_id IS NOT NULL
+              AND status IN ('awaiting_input', 'retrying', 'new', 'diagnosing')
+            ORDER BY updated_at DESC
+            LIMIT 100
+        """)
+        
+        checked = 0
+        newly_recovered = 0
+        total_recovered_val = 0.0
+        
+        for case in pending_cases:
+            checked += 1
+            cid = case['case_id']
+            link_id = case['payment_link_id']
+            cust_id = case['customer_id']
+            amount = float(case['amount_usd'] or 0.0)
+            
+            # If mock or no client, check if dry-run
+            if not razorpay_client:
+                # In dry run mode, check if there's an action log or simulate
+                continue
+                
+            try:
+                link_info = await asyncio.to_thread(razorpay_client.payment_link.fetch, link_id)
+                link_status = link_info.get("status")
+                
+                if link_status == "paid":
+                    from app.orchestrator import resolve_case
+                    await resolve_case(
+                        customer_id=cust_id,
+                        amount_recovered=amount,
+                        payment_reference=f"Razorpay_Link_Sync_{link_id}",
+                        case_id=cid
+                    )
+                    newly_recovered += 1
+                    total_recovered_val += amount
+                    await log_action(
+                        case_id=cid,
+                        customer_id=cust_id,
+                        action_type="link_reconciliation",
+                        channel="razorpay",
+                        recipient=cust_id,
+                        payload={"link_id": link_id, "link_status": "paid"},
+                        status="success",
+                        details=f"Payment link {link_id} verified as PAID via Razorpay API. Recovered: {case.get('currency', 'INR')} {amount:,.2f}"
+                    )
+                elif link_status in ("cancelled", "expired"):
+                    await conn.execute("""
+                        UPDATE cases 
+                        SET status = 'lost', last_action = $1, updated_at = NOW() 
+                        WHERE case_id = $2
+                    """, f"Payment link {link_status}", cid)
+                    await log_action(
+                        case_id=cid,
+                        customer_id=cust_id,
+                        action_type="link_reconciliation",
+                        channel="razorpay",
+                        recipient=cust_id,
+                        payload={"link_id": link_id, "link_status": link_status},
+                        status="failed",
+                        details=f"Payment link {link_id} was {link_status} by customer."
+                    )
+            except Exception as e:
+                print(f"[SyncLinks] Error checking link {link_id} for Case #{cid}: {e}")
+                
+        return {
+            "links_checked": checked,
+            "newly_recovered": newly_recovered,
+            "money_recovered": round(total_recovered_val, 2)
+        }

@@ -1,10 +1,8 @@
-// frontend/src/components/layout/MobileNav.tsx
-
-import React from "react"
-import { LayoutGrid, Users, TrendingUp, FileCode2 } from "lucide-react"
+import { LayoutGrid, CreditCard, Radar, ShieldAlert, Home } from "lucide-react"
 import { cn } from "@/lib/utils"
+import type { NavTab } from "@/components/layout/Header"
 
-export type NavTab = "dashboard" | "customers" | "analytics" | "docs"
+export type { NavTab }
 
 interface MobileNavProps {
   currentTab: NavTab
@@ -14,24 +12,29 @@ interface MobileNavProps {
 export const MobileNav: React.FC<MobileNavProps> = ({ currentTab, onTabChange }) => {
   const items = [
     {
+      id: "landing" as const,
+      label: "Home",
+      icon: Home,
+    },
+    {
       id: "dashboard" as const,
-      label: "Operations",
+      label: "Overview",
       icon: LayoutGrid,
     },
     {
-      id: "customers" as const,
-      label: "Customers",
-      icon: Users,
+      id: "payments" as const,
+      label: "Payments",
+      icon: CreditCard,
     },
     {
-      id: "analytics" as const,
-      label: "Funnel",
-      icon: TrendingUp,
+      id: "exceptions" as const,
+      label: "Exceptions",
+      icon: ShieldAlert,
     },
     {
-      id: "docs" as const,
-      label: "API Docs",
-      icon: FileCode2,
+      id: "detector" as const,
+      label: "Live Detect",
+      icon: Radar,
     },
   ]
 
@@ -60,7 +63,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ currentTab, onTabChange })
               className={cn(
                 "flex size-8 items-center justify-center rounded-lg transition-colors",
                 isActive
-                  ? "bg-purple-500/15 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300"
+                  ? "bg-primary/15 text-primary dark:bg-primary/25 dark:text-primary"
                   : "text-muted-foreground"
               )}
             >

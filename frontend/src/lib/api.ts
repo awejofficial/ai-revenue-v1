@@ -38,6 +38,13 @@ export class ApiError extends Error {
  * In production, uses VITE_API_BASE_URL or automatically falls back to the live Render backend.
  */
 function getApiBaseUrl(): string {
+  // If running locally, route through Vite proxy to local backend
+  if (
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+  ) {
+    return ""
+  }
   const envUrl = import.meta.env.VITE_API_BASE_URL
   if (envUrl && typeof envUrl === "string" && envUrl.trim().length > 0) {
     return envUrl.replace(/\/$/, "")
@@ -284,6 +291,99 @@ export async function seedDatabase(): Promise<{ status: string; message: string 
   })
 }
 
+// ============================================================
+// 7. TRACK 03: RAZORPAY DETECTOR, BATCH RUNNER & EXCEPTIONS
+// ============================================================
+
+/**
+ * Poll live Razorpay test-mode API: GET /payments/detect?hours_back={hours}
+ */
+export async function detectLivePayments(hours: number = 24): Promise<import("@/types/api").DetectorData> {
+  return request<import("@/types/api").DetectorData>(`/payments/detect?hours_back=${hours}`)
+}
+
+/**
+ * Ingest live payment from detector feed and execute autonomous recovery: POST /payments/ingest-live
+ */
+export async function ingestLivePayment(paymentData: Record<string, unknown>): Promise<any> {
+  return request<any>("/payments/ingest-live", {
+    method: "POST",
+    body: JSON.stringify(paymentData),
+  })
+}
+
+/**
+ * Sync status of all pending Razorpay links: POST /payments/sync-links
+ */
+export async function syncPaidLinks(): Promise<{
+  links_checked: number
+  newly_recovered: number
+  money_recovered: number
+}> {
+  return request<{
+    links_checked: number
+    newly_recovered: number
+    money_recovered: number
+  }>("/payments/sync-links", {
+    method: "POST",
+  })
+}
+
+/**
+ * Fetch Honest Exception List: GET /payments/exceptions
+ */
+export async function fetchHonestExceptions(): Promise<import("@/types/api").ExceptionsResponse> {
+  return request<import("@/types/api").ExceptionsResponse>("/payments/exceptions")
+}
+
+/**
+ * Run autonomous recovery batch with stopping rules: POST /agent/run-batch?count={count}
+ */
+export async function runBatchRecovery(count: number = 60): Promise<import("@/types/api").BatchRunResponse> {
+  return request<import("@/types/api").BatchRunResponse>(`/agent/run-batch?count=${count}`, {
+    method: "POST",
+  })
+}
+
+/**
+ * Fetch historical batch runs: GET /agent/runs
+ */
+export async function fetchBatchRuns(): Promise<import("@/types/api").BatchRun[]> {
+  return request<import("@/types/api").BatchRun[]>("/agent/runs")
+}
+
+/**
+ * Fetch specific batch run details: GET /agent/runs/{run_id}
+ */
+export async function fetchBatchRunDetails(runId: string): Promise<import("@/types/api").BatchRun> {
+  return request<import("@/types/api").BatchRun>(`/agent/runs/${runId}`)
+}
+
+/**
+ * 1-Click single payment recovery: POST /payments/{id}/recover
+ */
+export async function recoverPayment(id: string): Promise<any> {
+  return request<any>(`/payments/${id}/recover`, {
+    method: "POST",
+  })
+}
+
+/**
+ * Fetch payments transaction ledger: GET /payments/
+ */
+export async function fetchPaymentsList(
+  status?: string,
+  search?: string,
+  limit: number = 150
+): Promise<import("@/types/api").PaymentTransaction[]> {
+  const params = new URLSearchParams()
+  if (status && status !== "ALL") params.append("status", status)
+  if (search && search.trim()) params.append("search", search.trim())
+  if (limit) params.append("limit", limit.toString())
+  const qs = params.toString() ? `?${params.toString()}` : ""
+  return request<import("@/types/api").PaymentTransaction[]>(`/payments/${qs}`)
+}
+
 /**
  * Default grouped export for ergonomic consumption
  */
@@ -304,4 +404,14 @@ export const api = {
   ingestPSPWebhook,
   ingestBillingWebhook,
   seedDatabase,
+  detectLivePayments,
+  ingestLivePayment,
+  syncPaidLinks,
+  fetchHonestExceptions,
+  runBatchRecovery,
+  fetchBatchRuns,
+  fetchBatchRunDetails,
+  recoverPayment,
+  fetchPaymentsList,
 }
+

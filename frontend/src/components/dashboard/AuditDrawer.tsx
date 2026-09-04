@@ -13,6 +13,8 @@ import {
   ChevronDown,
   ChevronUp,
   Sparkles,
+  Volume2,
+  VolumeX,
 } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -98,6 +100,27 @@ export const AuditDrawer: React.FC<AuditDrawerProps> = ({
 }) => {
   const [resolving, setResolving] = useState(false)
   const [expandedAll, setExpandedAll] = useState(true)
+  const [isPlayingVoice, setIsPlayingVoice] = useState(false)
+
+  const handleVoicePlayback = () => {
+    if (!("speechSynthesis" in window)) return
+    if (isPlayingVoice) {
+      window.speechSynthesis.cancel()
+      setIsPlayingVoice(false)
+      return
+    }
+    const text =
+      selectedCase?.recovery_message ||
+      selectedCase?.llm_reasoning ||
+      "Namaste! This is an automated recovery update regarding your recent pending payment. Please use the secure link to complete the transaction."
+    const utterance = new SpeechSynthesisUtterance(text)
+    utterance.rate = 0.95
+    utterance.pitch = 1.05
+    utterance.onend = () => setIsPlayingVoice(false)
+    utterance.onerror = () => setIsPlayingVoice(false)
+    setIsPlayingVoice(true)
+    window.speechSynthesis.speak(utterance)
+  }
 
   if (!selectedCase) {
     return (
@@ -287,6 +310,77 @@ export const AuditDrawer: React.FC<AuditDrawerProps> = ({
             </div>
           </div>
         )}
+
+        {/* Root Cause & Action Tags */}
+        {(selectedCase.root_cause || selectedCase.recovery_action) && (
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border/70 bg-muted/40 p-3">
+            {selectedCase.root_cause && (
+              <div className="flex items-center gap-1.5 text-xs font-medium">
+                <span className="text-muted-foreground">Root Cause:</span>
+                <Badge variant="outline" className="font-mono text-[11px] font-semibold bg-background">
+                  {selectedCase.root_cause}
+                </Badge>
+              </div>
+            )}
+            {selectedCase.recovery_action && (
+              <div className="flex items-center gap-1.5 text-xs font-medium">
+                <span className="text-muted-foreground">Action:</span>
+                <Badge variant="secondary" className="font-mono text-[11px] font-semibold">
+                  {selectedCase.recovery_action}
+                </Badge>
+              </div>
+            )}
+            {selectedCase.payment_link_id && (
+              <div className="flex items-center gap-1.5 text-xs font-medium">
+                <span className="text-muted-foreground">Razorpay Link:</span>
+                <span className="font-mono text-[11px] text-primary underline">
+                  {selectedCase.payment_link_id}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Hinglish Recovery Copy & Live Voice Dunning Player */}
+        {selectedCase.recovery_message && (
+          <div className="relative overflow-hidden rounded-xl border border-emerald-500/30 bg-emerald-50/40 p-4 dark:bg-emerald-950/20">
+            <div className="flex items-center justify-between gap-3 pb-2 border-b border-emerald-500/20">
+              <div className="flex items-center gap-2">
+                <span className="flex size-2 rounded-full bg-emerald-500 animate-pulse" />
+                <h4 className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                  Hinglish AI Voice / WhatsApp Recovery Copy
+                </h4>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleVoicePlayback}
+                className={cn(
+                  "h-7 gap-1.5 rounded-md px-2.5 text-[11px] font-semibold shadow-2xs transition-all",
+                  isPlayingVoice
+                    ? "border-red-500/40 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-300"
+                    : "border-emerald-600/30 bg-emerald-100/60 text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-200"
+                )}
+              >
+                {isPlayingVoice ? (
+                  <>
+                    <VolumeX className="size-3.5 animate-pulse" />
+                    <span>Stop Voice</span>
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="size-3.5" />
+                    <span>Simulate Voice Dunning</span>
+                  </>
+                )}
+              </Button>
+            </div>
+            <p className="mt-2.5 text-xs text-foreground/90 font-mono leading-relaxed bg-background/80 p-3 rounded-lg border border-emerald-500/20">
+              "{selectedCase.recovery_message}"
+            </p>
+          </div>
+        )}
+
 
         {/* Lifecycle Audit Stream Header */}
         <div className="pt-2">
