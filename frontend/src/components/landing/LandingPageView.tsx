@@ -223,7 +223,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({
             </h1>
 
             <p className="max-w-2xl mx-auto text-sm text-muted-foreground sm:text-base lg:text-lg leading-relaxed">
-              AR is an autonomous dunning and revenue recovery agent built for Razorpay merchants. It intercepts transaction drop-offs in real-time, diagnoses bank codes in &lt;500ms with Gemini Flash &amp; Groq LPU inference, and dispatches multi-rail recovery links within safe deterministic policy bounds.
+              AR is an autonomous dunning and revenue recovery agent built for Razorpay merchants. It intercepts transaction drop-offs in real-time, diagnoses bank codes in &lt;500ms with Google Gemini Flash &amp; zero-latency heuristics, and dispatches multi-rail recovery links within safe deterministic policy bounds.
             </p>
           </div>
 
@@ -334,7 +334,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({
                   </div>
                   <div className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground font-mono">
                     <span className="size-1.5 rounded-full bg-blue-500" />
-                    <span>Gemini Flash &amp; Groq LPU</span>
+                    <span>Google Gemini Flash &amp; Fast Heuristics</span>
                   </div>
                 </div>
 
@@ -544,7 +544,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({
             <Card className="flex flex-col justify-between">
               <CardHeader>
                 <div className="font-mono text-[11px] text-muted-foreground uppercase">
-                  Groq LPU &amp; Gemini 3.7
+                  Google Gemini 3.7 Flash
                 </div>
                 <CardTitle className="text-xl">
                   Low-Latency Reasoning Engine
